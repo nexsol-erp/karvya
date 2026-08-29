@@ -39,7 +39,12 @@ import {
   saveProduct,
   uploadProductImage,
 } from '../../api/admin';
-import type { AdminProductDetail, AdminProductImage, ProductStatus } from '../../api/admin';
+import type {
+  AdminAttributeValue,
+  AdminProductDetail,
+  AdminProductImage,
+  ProductStatus,
+} from '../../api/admin';
 import { palette } from '../../theme';
 
 const STATUSES: ProductStatus[] = ['DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED'];
@@ -55,10 +60,7 @@ const BLANK = {
   shortDescription: '',
   description: '',
   price: '',
-  material: '',
-  colour: '',
-  dimensions: '',
-  careInstructions: '',
+  author: '',
   stockQuantity: '0',
   lowStockThreshold: '3',
   featured: false,
@@ -80,10 +82,7 @@ function toForm(product: AdminProductDetail): Form {
     shortDescription: product.shortDescription ?? '',
     description: product.description ?? '',
     price: String(product.price),
-    material: product.material ?? '',
-    colour: product.colour ?? '',
-    dimensions: product.dimensions ?? '',
-    careInstructions: product.careInstructions ?? '',
+    author: product.author ?? '',
     stockQuantity: String(product.stockQuantity),
     lowStockThreshold: String(product.lowStockThreshold),
     featured: product.featured,
@@ -115,6 +114,8 @@ export function AdminProductEdit() {
   const [form, setForm] = useState<Form>(BLANK);
   const [version, setVersion] = useState<number | null>(null);
   const [images, setImages] = useState<AdminProductImage[]>([]);
+  const [attributes, setAttributes] = useState<AdminAttributeValue[]>([]);
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -123,6 +124,10 @@ export function AdminProductEdit() {
   const [altText, setAltText] = useState('');
 
   const categories = useQuery({ queryKey: adminKeys.categories, queryFn: listCategories });
+  // The category decides what the indexed field is called, and whether it
+  // exists at all - "Author" for a book, nothing for a bird house.
+  const authorLabel =
+    (categories.data ?? []).find((c) => String(c.id) === form.categoryId)?.authorLabel ?? null;
   const vendors = useQuery({ queryKey: adminKeys.vendors, queryFn: listVendors });
   const existing = useQuery({
     queryKey: adminKeys.product(productId ?? 0),
@@ -135,6 +140,10 @@ export function AdminProductEdit() {
     setForm(toForm(existing.data));
     setVersion(existing.data.version);
     setImages(existing.data.images);
+    setAttributes(existing.data.attributes);
+    setAttributeValues(
+      Object.fromEntries(existing.data.attributes.map((a) => [a.slug, a.value ?? ''])),
+    );
   }, [existing.data]);
 
   const set =
@@ -183,6 +192,7 @@ export function AdminProductEdit() {
         // empty means "we make this ourselves", which has to be expressible
         vendorId: form.vendorId === '' ? null : Number(form.vendorId),
         vendorPrice: form.vendorPrice.trim() === '' ? null : form.vendorPrice.trim(),
+        attributes: attributeValues,
         // the slug is derived from the name when left empty
         slug: form.slug.trim(),
         // carries the optimistic lock, so a save over someone else's is refused
@@ -405,15 +415,6 @@ export function AdminProductEdit() {
 
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField label="Material" value={form.material} onChange={set('material')} fullWidth />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField label="Colour" value={form.colour} onChange={set('colour')} fullWidth />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField label="Dimensions" value={form.dimensions} onChange={set('dimensions')} fullWidth />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     select label="Status" value={form.status} onChange={set('status')} fullWidth
                   >
@@ -424,10 +425,37 @@ export function AdminProductEdit() {
                 </Grid>
               </Grid>
 
-              <TextField
-                label="Care instructions" value={form.careInstructions}
-                onChange={set('careInstructions')} multiline minRows={2} fullWidth
-              />
+              {authorLabel && (
+                <TextField
+                  label={authorLabel} value={form.author} onChange={set('author')}
+                  error={Boolean(fieldErrors.author)}
+                  helperText={fieldErrors.author ?? 'Searchable, and shown on the product page'}
+                  fullWidth
+                />
+              )}
+
+              {attributes.length > 0 && (
+                <Stack spacing={2}>
+                  {attributes.map((attribute) => (
+                    <TextField
+                      key={attribute.slug}
+                      label={attribute.label}
+                      value={attributeValues[attribute.slug] ?? ''}
+                      onChange={(e) =>
+                        setAttributeValues((prev) => ({ ...prev, [attribute.slug]: e.target.value }))
+                      }
+                      helperText={attribute.helpText ?? undefined}
+                      fullWidth
+                    />
+                  ))}
+                </Stack>
+              )}
+
+              {!isNew && attributes.length === 0 && (
+                <Typography variant="body2">
+                  This category has no extra fields. Define them under Attributes.
+                </Typography>
+              )}
 
               <Divider />
 

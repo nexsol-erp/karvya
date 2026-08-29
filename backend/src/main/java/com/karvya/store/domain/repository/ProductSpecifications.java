@@ -35,14 +35,24 @@ public final class ProductSpecifications {
         return (root, query, cb) -> cb.equal(root.get("category").get("slug"), categorySlug);
     }
 
-    /** Case-insensitive match against the product name or its short description. */
+    /**
+     * Case-insensitive match against the name, the short description, or the
+     * author.
+     *
+     * <p>The author matters as much as the title for anything written: a
+     * customer looking for a book far more often remembers who wrote it than
+     * what it was called, and a search that could not find it that way would
+     * look broken rather than empty.
+     */
     public static Specification<Product> matchesText(String term) {
         return (root, query, cb) -> {
             String pattern = "%" + term.toLowerCase() + "%";
             Predicate onName = cb.like(cb.lower(root.get("name")), pattern);
             Predicate onSummary = cb.like(
                     cb.lower(cb.coalesce(root.get("shortDescription"), "")), pattern);
-            return cb.or(onName, onSummary);
+            Predicate onAuthor = cb.like(
+                    cb.lower(cb.coalesce(root.get("author"), "")), pattern);
+            return cb.or(onName, onSummary, onAuthor);
         };
     }
 

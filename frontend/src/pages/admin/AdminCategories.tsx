@@ -32,7 +32,9 @@ import {
   type AdminCategory,
 } from '../../api/admin';
 
-const BLANK = { name: '', slug: '', description: '', displayOrder: '0', active: true };
+const BLANK = {
+  name: '', slug: '', description: '', authorLabel: '', displayOrder: '0', active: true,
+};
 
 type Form = typeof BLANK;
 
@@ -110,6 +112,7 @@ export function AdminCategories() {
       name: category.name,
       slug: category.slug,
       description: category.description ?? '',
+      authorLabel: category.authorLabel ?? '',
       displayOrder: String(category.displayOrder),
       active: category.active,
     });
@@ -201,6 +204,14 @@ export function AdminCategories() {
               <TextField
                 label="Description" value={form.description} onChange={set('description')}
                 multiline minRows={2} fullWidth size="small"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Name for the creator field" value={form.authorLabel}
+                onChange={set('authorLabel')}
+                helperText='"Author" for books, "Artist" for records. Leave empty if nobody wrote it.'
+                fullWidth size="small"
               />
             </Grid>
           </Grid>

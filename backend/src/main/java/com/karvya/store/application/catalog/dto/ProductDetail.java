@@ -19,10 +19,12 @@ public record ProductDetail(
         String shortDescription,
         String description,
         BigDecimal price,
-        String material,
-        String colour,
-        String dimensions,
-        String careInstructions,
+        /** Null for anything that is not written by someone. */
+        String author,
+        /** What to call it here - "Author", "Artist" - or null to hide it. */
+        String authorLabel,
+        /** Whatever the administrator decided this kind of product has. */
+        List<Attribute> attributes,
         boolean inStock,
         int stockQuantity,
         boolean featured,
@@ -31,7 +33,11 @@ public record ProductDetail(
         String categoryName,
         List<ImageRef> images
 ) {
-    public static ProductDetail from(Product p) {
+    /** One label and value, already in the order it should be shown. */
+    public record Attribute(String label, String value) {
+    }
+
+    public static ProductDetail from(Product p, List<Attribute> attributes) {
         return new ProductDetail(
                 p.getId(),
                 p.getSku(),
@@ -40,10 +46,9 @@ public record ProductDetail(
                 p.getShortDescription(),
                 p.getDescription(),
                 p.getPrice(),
-                p.getMaterial(),
-                p.getColour(),
-                p.getDimensions(),
-                p.getCareInstructions(),
+                p.getAuthor(),
+                p.getCategory().getAuthorLabel(),
+                attributes,
                 p.isInStock(),
                 p.getStockQuantity(),
                 p.isFeatured(),

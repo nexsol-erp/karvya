@@ -8,6 +8,7 @@ import com.karvya.store.domain.NotFoundException;
 import com.karvya.store.domain.model.Product;
 import com.karvya.store.domain.model.ProductStatus;
 import com.karvya.store.domain.repository.CategoryRepository;
+import com.karvya.store.domain.repository.ProductAttributeValueRepository;
 import com.karvya.store.domain.repository.ProductRepository;
 import com.karvya.store.domain.repository.ProductSpecifications;
 import org.springframework.data.domain.PageRequest;
@@ -34,10 +35,13 @@ public class CatalogQueryService {
 
     private final ProductRepository products;
     private final CategoryRepository categories;
+    private final ProductAttributeValueRepository attributeValues;
 
-    public CatalogQueryService(ProductRepository products, CategoryRepository categories) {
+    public CatalogQueryService(ProductRepository products, CategoryRepository categories,
+                               ProductAttributeValueRepository attributeValues) {
         this.products = products;
         this.categories = categories;
+        this.attributeValues = attributeValues;
     }
 
     public PageResponse<ProductSummary> search(ProductQuery query) {
@@ -76,9 +80,19 @@ public class CatalogQueryService {
     }
 
     public ProductDetail findBySlug(String slug) {
-        return products.findBySlugAndStatus(slug, ProductStatus.ACTIVE)
-                .map(ProductDetail::from)
+        Product product = products.findBySlugAndStatus(slug, ProductStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Product", slug));
+
+        // Only what this product actually says, in the order the administrator
+        // put the attributes in. An attribute with no value is simply absent
+        // rather than an empty row on the page.
+        List<ProductDetail.Attribute> attributes =
+                attributeValues.findForProduct(product.getId()).stream()
+                        .map(v -> new ProductDetail.Attribute(
+                                v.getAttribute().getLabel(), v.getValue()))
+                        .toList();
+
+        return ProductDetail.from(product, attributes);
     }
 
     public List<ProductSummary> findRelated(String slug) {

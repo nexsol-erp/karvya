@@ -26,11 +26,17 @@ import { StockBadge } from '../components/common/StockBadge';
 import { SEOHead } from '../components/common/SEOHead';
 import { NotFound } from './NotFound';
 import { ApiError } from '../api/client';
+import type { ProductDetail as ProductDetailType } from '../api/types';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 import { useCart } from '../hooks/useCart';
 import { formatMoney, whatsAppLink } from '../lib/format';
 
 /** Attribute rows are omitted entirely when the value is missing. */
+/** A value by its label, case-insensitively, for the structured data. */
+function attributeNamed(product: ProductDetailType, label: string): string | undefined {
+  return product.attributes.find((a) => a.label.toLowerCase() === label)?.value;
+}
+
 function Attribute({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
   return (
@@ -123,8 +129,10 @@ export function ProductDetail() {
     sku: p.sku,
     description: p.shortDescription ?? p.description ?? undefined,
     image: p.images.map((i) => `${window.location.origin}/media/${i.key}-1280.jpg`),
-    material: p.material ?? undefined,
-    color: p.colour ?? undefined,
+    // schema.org names these; whether this product has them is now up to
+    // whoever defined its attributes, so they are looked up rather than assumed
+    material: attributeNamed(p, 'material'),
+    color: attributeNamed(p, 'colour') ?? attributeNamed(p, 'color'),
     category: p.categoryName,
     offers: {
       '@type': 'Offer',
@@ -229,10 +237,16 @@ export function ProductDetail() {
             <Divider />
 
             <Box>
-              <Attribute label="Material" value={p.material} />
-              <Attribute label="Colour" value={p.colour} />
-              <Attribute label="Dimensions" value={p.dimensions} />
-              <Attribute label="Care" value={p.careInstructions} />
+              {/* The category decides what this field is called, and whether
+                  it exists: "Author" for a book, "Artist" for a record, absent
+                  for something nobody wrote. */}
+              {p.authorLabel && <Attribute label={p.authorLabel} value={p.author} />}
+
+              {/* Everything else the administrator defined for this kind of
+                  product, already in the order they chose. */}
+              {p.attributes.map((attribute) => (
+                <Attribute key={attribute.label} label={attribute.label} value={attribute.value} />
+              ))}
               <Attribute label="SKU" value={p.sku} />
             </Box>
 

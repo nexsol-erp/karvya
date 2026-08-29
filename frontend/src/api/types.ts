@@ -1,5 +1,11 @@
 /** Mirrors the backend DTOs under /api/v1. Kept hand-written and small. */
 
+/** One label and value on a product page. */
+export interface ProductAttribute {
+  label: string;
+  value: string;
+}
+
 export interface ImageRef {
   key: string;
   alt: string;
@@ -34,10 +40,12 @@ export interface ProductSummary {
 
 export interface ProductDetail extends Omit<ProductSummary, 'image'> {
   description: string | null;
-  material: string | null;
-  colour: string | null;
-  dimensions: string | null;
-  careInstructions: string | null;
+  /** Whoever wrote or made it. Null when this category has no such field. */
+  author: string | null;
+  /** What to call that field here - "Author", "Artist" - or null to hide it. */
+  authorLabel: string | null;
+  /** Whatever the administrator decided this kind of product has, in order. */
+  attributes: ProductAttribute[];
   placeholderContent: boolean;
   images: ImageRef[];
 }

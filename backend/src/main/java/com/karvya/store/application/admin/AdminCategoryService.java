@@ -29,6 +29,8 @@ public class AdminCategoryService {
             String name,
             String slug,
             String description,
+            /** What this category calls its indexed field, or null if it has none. */
+            String authorLabel,
             int displayOrder,
             boolean active,
             long productCount
@@ -45,6 +47,13 @@ public class AdminCategoryService {
             String slug,
 
             @Size(max = 2000) String description,
+
+            /**
+             * "Author" for a book, "Artist" for a record, empty for something
+             * nobody wrote. Empty hides the field on the product form and on
+             * the product page.
+             */
+            @Size(max = 40) String authorLabel,
 
             int displayOrder,
 
@@ -67,9 +76,7 @@ public class AdminCategoryService {
                 .sorted(java.util.Comparator
                         .comparingInt(Category::getDisplayOrder)
                         .thenComparing(Category::getName))
-                .map(category -> new CategoryView(
-                        category.getId(), category.getName(), category.getSlug(),
-                        category.getDescription(), category.getDisplayOrder(), category.isActive(),
+                .map(category -> new CategoryView(category.getId(), category.getName(), category.getSlug(), category.getDescription(), category.getAuthorLabel(), category.getDisplayOrder(), category.isActive(),
                         countProducts(category)))
                 .toList();
     }
@@ -120,6 +127,9 @@ public class AdminCategoryService {
         category.setDescription(
                 (request.description() == null || request.description().isBlank())
                         ? null : request.description().trim());
+        category.setAuthorLabel(
+                request.authorLabel() == null || request.authorLabel().isBlank()
+                        ? null : request.authorLabel().trim());
         category.setDisplayOrder(request.displayOrder());
         category.setActive(Boolean.TRUE.equals(request.active()));
         category.setUpdatedBy(actor);
@@ -132,8 +142,7 @@ public class AdminCategoryService {
     }
 
     private CategoryView toView(Category category) {
-        return new CategoryView(category.getId(), category.getName(), category.getSlug(),
-                category.getDescription(), category.getDisplayOrder(), category.isActive(),
+        return new CategoryView(category.getId(), category.getName(), category.getSlug(), category.getDescription(), category.getAuthorLabel(), category.getDisplayOrder(), category.isActive(),
                 countProducts(category));
     }
 

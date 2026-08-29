@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 
 /**
@@ -47,11 +48,15 @@ public class AdminProductService {
     private final ImageUploadValidator validator;
     private final ImageRenditionService renditions;
     private final VendorRepository vendors;
+    private final ProductAttributeRepository attributes;
+    private final ProductAttributeValueRepository attributeValues;
 
     public AdminProductService(ProductRepository products, CategoryRepository categories,
                                ProductImageRepository images, OrderItemRepository orderItems,
                                StorageService storage, ImageUploadValidator validator,
-                               ImageRenditionService renditions, VendorRepository vendors) {
+                               ImageRenditionService renditions, VendorRepository vendors,
+                               ProductAttributeRepository attributes,
+                               ProductAttributeValueRepository attributeValues) {
         this.products = products;
         this.categories = categories;
         this.images = images;
@@ -60,6 +65,8 @@ public class AdminProductService {
         this.validator = validator;
         this.renditions = renditions;
         this.vendors = vendors;
+        this.attributes = attributes;
+        this.attributeValues = attributeValues;
     }
 
     // ---- reading ----------------------------------------------------------
@@ -82,7 +89,8 @@ public class AdminProductService {
 
     @Transactional(readOnly = true)
     public AdminProductDtos.Detail find(Long id) {
-        return AdminProductDtos.Detail.from(require(id));
+        Product product = require(id);
+        return AdminProductDtos.Detail.from(product, attributesFor(product));
     }
 
     // ---- writing ----------------------------------------------------------
@@ -99,7 +107,12 @@ public class AdminProductService {
         Product product = Product.createDraft(sku, slug, request.name(), requireCategory(request.categoryId()));
         apply(product, request, actor);
 
-        return AdminProductDtos.Detail.from(products.save(product));
+        // saved first: an attribute value references the product, so it needs
+        // an id before anything can be recorded against it
+        Product saved = products.saveAndFlush(product);
+        applyAttributes(saved, request.attributes());
+
+        return AdminProductDtos.Detail.from(saved, attributesFor(saved));
     }
 
     /**
@@ -134,11 +147,12 @@ public class AdminProductService {
 
         try {
             products.saveAndFlush(product);
+            applyAttributes(product, request.attributes());
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ConflictException("product-modified",
                     "Somebody else saved this product while you were editing. Reload and try again.");
         }
-        return AdminProductDtos.Detail.from(product);
+        return AdminProductDtos.Detail.from(product, attributesFor(product));
     }
 
     /**
@@ -158,7 +172,7 @@ public class AdminProductService {
 
         product.setStatus(status);
         product.setUpdatedBy(actor);
-        return AdminProductDtos.Detail.from(product);
+        return AdminProductDtos.Detail.from(product, attributesFor(product));
     }
 
     /** Reports whether a product has ever been ordered, for the interface to warn on. */
@@ -202,7 +216,7 @@ public class AdminProductService {
         products.saveAndFlush(product);
 
         log.info("Added image {} to product {}", stored.baseKey(), product.getSku());
-        return AdminProductDtos.Detail.from(product);
+        return AdminProductDtos.Detail.from(product, attributesFor(product));
     }
 
     /**
@@ -239,7 +253,7 @@ public class AdminProductService {
 
         product.setUpdatedBy(actor);
         products.saveAndFlush(product);
-        return AdminProductDtos.Detail.from(product);
+        return AdminProductDtos.Detail.from(product, attributesFor(product));
     }
 
     @Transactional
@@ -269,7 +283,7 @@ public class AdminProductService {
         ImageRenditions.allKeys(key, formats).forEach(storage::delete);
         product.setUpdatedBy(actor);
 
-        return AdminProductDtos.Detail.from(product);
+        return AdminProductDtos.Detail.from(product, attributesFor(product));
     }
 
     // ---- plumbing ---------------------------------------------------------
@@ -289,10 +303,7 @@ public class AdminProductService {
         product.setShortDescription(blankToNull(request.shortDescription()));
         product.setDescription(blankToNull(request.description()));
         product.setPrice(request.price());
-        product.setMaterial(blankToNull(request.material()));
-        product.setColour(blankToNull(request.colour()));
-        product.setDimensions(blankToNull(request.dimensions()));
-        product.setCareInstructions(blankToNull(request.careInstructions()));
+        product.setAuthor(blankToNull(request.author()));
         product.setStockQuantity(request.stockQuantity());
         product.setLowStockThreshold(request.lowStockThreshold());
         product.setFeatured(request.featured());
@@ -342,6 +353,68 @@ public class AdminProductService {
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("(^-|-$)", "");
         return normalised.isBlank() ? "product" : normalised;
+    }
+
+    /**
+     * What this product should be asked for, and what it currently says.
+     *
+     * <p>Driven by the definitions for its category rather than by the values
+     * already recorded, so a newly added attribute appears on the form
+     * immediately, with an empty answer, instead of only on products that
+     * happen to have one.
+     */
+    private List<AdminProductDtos.AttributeValue> attributesFor(Product product) {
+        Map<Long, String> recorded = attributeValues.findForProduct(product.getId()).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        v -> v.getAttribute().getId(), ProductAttributeValue::getValue));
+
+        return attributes.findForCategory(product.getCategory().getId()).stream()
+                .map(a -> new AdminProductDtos.AttributeValue(
+                        a.getId(), a.getSlug(), a.getLabel(), a.getHelpText(),
+                        recorded.get(a.getId())))
+                .toList();
+    }
+
+    /**
+     * Replaces what this product says, for the attributes its category defines.
+     *
+     * <p>Only those: a value submitted for an attribute belonging to another
+     * category is ignored rather than stored, so switching a product's category
+     * cannot leave answers behind that nothing will ever show or edit again.
+     */
+    private void applyAttributes(Product product, Map<String, String> submitted) {
+        if (submitted == null) {
+            return;
+        }
+
+        List<ProductAttribute> applicable =
+                attributes.findForCategory(product.getCategory().getId());
+        Map<Long, ProductAttributeValue> existing =
+                attributeValues.findForProduct(product.getId()).stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                v -> v.getAttribute().getId(), v -> v));
+
+        for (ProductAttribute attribute : applicable) {
+            if (!submitted.containsKey(attribute.getSlug())) {
+                continue;
+            }
+
+            String value = blankToNull(submitted.get(attribute.getSlug()));
+            ProductAttributeValue current = existing.get(attribute.getId());
+
+            if (value == null) {
+                // blank means "this product does not have one", which is a
+                // removal rather than an empty string to render
+                if (current != null) {
+                    attributeValues.delete(current);
+                }
+            } else if (current == null) {
+                attributeValues.save(ProductAttributeValue.of(product, attribute, value));
+            } else {
+                current.setValue(value);
+                attributeValues.save(current);
+            }
+        }
     }
 
     private String blankToNull(String value) {

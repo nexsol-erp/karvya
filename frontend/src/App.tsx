@@ -51,6 +51,9 @@ const AdminProductEdit = lazy(() =>
 const AdminAppearance = lazy(() =>
   import('./pages/admin/AdminAppearance').then((m) => ({ default: m.AdminAppearance })),
 );
+const AdminAttributes = lazy(() =>
+  import('./pages/admin/AdminAttributes').then((m) => ({ default: m.AdminAttributes })),
+);
 const AdminVendors = lazy(() =>
   import('./pages/admin/AdminVendors').then((m) => ({ default: m.AdminVendors })),
 );
@@ -188,6 +191,7 @@ export default function App() {
                   <Route path="products/new" element={<AdminProductEdit />} />
                   <Route path="products/:id" element={<AdminProductEdit />} />
                   <Route path="categories" element={<AdminCategories />} />
+                  <Route path="attributes" element={<AdminAttributes />} />
                   <Route path="vendors" element={<AdminVendors />} />
                   <Route path="enquiries" element={<AdminEnquiries />} />
                   <Route path="customers" element={<AdminCustomers />} />

@@ -164,6 +164,28 @@ export interface OrderSupply {
   productGone: boolean;
 }
 
+/** One attribute on the product form: what to ask, and the answer. */
+export interface AdminAttributeValue {
+  id: number;
+  slug: string;
+  label: string;
+  helpText: string | null;
+  value: string | null;
+}
+
+/** A definition, as the Attributes screen lists them. */
+export interface AttributeRow {
+  id: number;
+  label: string;
+  slug: string;
+  categoryId: number | null;
+  categoryName: string | null;
+  helpText: string | null;
+  displayOrder: number;
+  active: boolean;
+  productCount: number;
+}
+
 export interface AdminProductDetail {
   id: number;
   sku: string;
@@ -174,10 +196,11 @@ export interface AdminProductDetail {
   shortDescription: string | null;
   description: string | null;
   price: string | number;
-  material: string | null;
-  colour: string | null;
-  dimensions: string | null;
-  careInstructions: string | null;
+  author: string | null;
+  /** What this category calls that field, or null when it has none. */
+  authorLabel: string | null;
+  /** What to ask for, and what is currently recorded. */
+  attributes: AdminAttributeValue[];
   stockQuantity: number;
   lowStockThreshold: number;
   featured: boolean;
@@ -200,6 +223,8 @@ export interface AdminCategory {
   name: string;
   slug: string;
   description: string | null;
+  /** "Author", "Artist", or null when this category has no such field. */
+  authorLabel: string | null;
   displayOrder: number;
   active: boolean;
   productCount: number;
@@ -251,6 +276,7 @@ export const adminKeys = {
   product: (id: number) => ['admin', 'product', id] as const,
   categories: ['admin', 'categories'] as const,
   vendors: ['admin', 'vendors'] as const,
+  attributes: ['admin', 'attributes'] as const,
   settings: ['admin', 'settings'] as const,
   customers: (q: string, page: number) => ['admin', 'customers', q, page] as const,
   customer: (id: number) => ['admin', 'customer', id] as const,
@@ -415,6 +441,21 @@ export const setCategoryActive = (id: number, active: boolean): Promise<AdminCat
     method: 'PATCH',
     headers: jsonHeaders(),
   });
+
+export const listAttributes = (): Promise<AttributeRow[]> => apiFetch('/admin/attributes');
+
+export const saveAttribute = (
+  id: number | null,
+  body: Record<string, unknown>,
+): Promise<AttributeRow> =>
+  apiFetch(id === null ? '/admin/attributes' : `/admin/attributes/${id}`, {
+    method: id === null ? 'POST' : 'PUT',
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+
+export const deleteAttribute = (id: number): Promise<void> =>
+  apiFetch(`/admin/attributes/${id}`, { method: 'DELETE', headers: csrfHeader() });
 
 export const listVendors = (): Promise<VendorRow[]> => apiFetch('/admin/vendors');
 

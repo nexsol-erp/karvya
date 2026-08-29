@@ -18,6 +18,7 @@ import DashboardIcon from '@mui/icons-material/GridViewOutlined';
 import OrdersIcon from '@mui/icons-material/ReceiptLongOutlined';
 import ProductsIcon from '@mui/icons-material/Inventory2Outlined';
 import CategoriesIcon from '@mui/icons-material/CategoryOutlined';
+import AttributesIcon from '@mui/icons-material/TuneOutlined';
 import VendorsIcon from '@mui/icons-material/LocalShippingOutlined';
 import EnquiriesIcon from '@mui/icons-material/ForumOutlined';
 import CustomersIcon from '@mui/icons-material/PeopleOutlined';
@@ -35,6 +36,7 @@ const NAV = [
   { label: 'Orders', to: '/admin/orders', icon: <OrdersIcon fontSize="small" /> },
   { label: 'Products', to: '/admin/products', icon: <ProductsIcon fontSize="small" /> },
   { label: 'Categories', to: '/admin/categories', icon: <CategoriesIcon fontSize="small" /> },
+  { label: 'Attributes', to: '/admin/attributes', icon: <AttributesIcon fontSize="small" /> },
   { label: 'Suppliers', to: '/admin/vendors', icon: <VendorsIcon fontSize="small" /> },
   { label: 'Enquiries', to: '/admin/enquiries', icon: <EnquiriesIcon fontSize="small" /> },
   { label: 'Customers', to: '/admin/customers', icon: <CustomersIcon fontSize="small" /> },

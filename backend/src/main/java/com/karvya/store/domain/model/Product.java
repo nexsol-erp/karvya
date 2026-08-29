@@ -65,17 +65,16 @@ public class Product extends Auditable {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(length = 160)
-    private String material;
-
-    @Column(length = 120)
-    private String colour;
-
-    @Column(length = 160)
-    private String dimensions;
-
-    @Column(name = "care_instructions", columnDefinition = "text")
-    private String careInstructions;
+    /**
+     * Kept as a column rather than an attribute, unlike everything else that
+     * varies by what is being sold.
+     *
+     * <p>It is what customers search and browse by, so it needs an index and a
+     * place on the product card, and neither is reasonable against a generic
+     * key-value table. Null for anything that does not have one.
+     */
+    @Column(length = 200)
+    private String author;
 
     @Column(name = "stock_quantity", nullable = false)
     private int stockQuantity;
@@ -198,14 +197,8 @@ public class Product extends Auditable {
     public void setDescription(String description) { this.description = description; }
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
-    public String getMaterial() { return material; }
-    public void setMaterial(String material) { this.material = material; }
-    public String getColour() { return colour; }
-    public void setColour(String colour) { this.colour = colour; }
-    public String getDimensions() { return dimensions; }
-    public void setDimensions(String dimensions) { this.dimensions = dimensions; }
-    public String getCareInstructions() { return careInstructions; }
-    public void setCareInstructions(String v) { this.careInstructions = v; }
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
     public int getStockQuantity() { return stockQuantity; }
     public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
     public int getLowStockThreshold() { return lowStockThreshold; }

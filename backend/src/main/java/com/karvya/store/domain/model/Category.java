@@ -22,6 +22,16 @@ public class Category extends Auditable {
     @Column(name = "image_key", length = 255)
     private String imageKey;
 
+    /**
+     * What the product's indexed free-text field is called for this category,
+     * or null when it has no such field.
+     *
+     * <p>"Author" for a book, "Artist" for a record, nothing for a bird house.
+     * One column, named differently - or hidden - by what is being sold.
+     */
+    @Column(name = "author_label", length = 40)
+    private String authorLabel;
+
     @Column(name = "display_order", nullable = false)
     private int displayOrder;
 
@@ -47,6 +57,8 @@ public class Category extends Auditable {
     public void setDescription(String description) { this.description = description; }
     public String getImageKey() { return imageKey; }
     public void setImageKey(String imageKey) { this.imageKey = imageKey; }
+    public String getAuthorLabel() { return authorLabel; }
+    public void setAuthorLabel(String v) { this.authorLabel = v; }
     public int getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
     public boolean isActive() { return active; }

@@ -108,7 +108,10 @@ class CatalogApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sku").value("KV-BH-05"))
                 .andExpect(jsonPath("$.images.length()").value(2))
-                .andExpect(jsonPath("$.material").isNotEmpty())
+                // Material is no longer a column but an attribute an
+                // administrator defines, and the migration carried the seeded
+                // values across rather than dropping them with the column.
+                .andExpect(jsonPath("$.attributes[?(@.label=='Material')].value").isNotEmpty())
                 // seeded copy is flagged so the storefront can mark it provisional
                 .andExpect(jsonPath("$.placeholderContent").value(true));
     }

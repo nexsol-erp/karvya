@@ -8,6 +8,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 public final class AdminProductDtos {
 
@@ -37,6 +38,16 @@ public final class AdminProductDtos {
                     p.primaryImage().map(ProductImage::getStorageKey).orElse(null),
                     p.getUpdatedAt());
         }
+    }
+
+    /** One attribute as the admin screen shows it: what to ask for, and the answer. */
+    public record AttributeValue(
+            Long id,
+            String slug,
+            String label,
+            String helpText,
+            String value
+    ) {
     }
 
     public record Image(
@@ -70,10 +81,10 @@ public final class AdminProductDtos {
             String shortDescription,
             String description,
             BigDecimal price,
-            String material,
-            String colour,
-            String dimensions,
-            String careInstructions,
+            String author,
+            /** What this category calls that field, or null when it has none. */
+            String authorLabel,
+            List<AttributeValue> attributes,
             int stockQuantity,
             int lowStockThreshold,
             boolean featured,
@@ -89,12 +100,12 @@ public final class AdminProductDtos {
             Instant updatedAt,
             String updatedBy
     ) {
-        public static Detail from(Product p) {
+        public static Detail from(Product p, List<AttributeValue> attributes) {
             return new Detail(
                     p.getId(), p.getSku(), p.getSlug(), p.getName(),
                     p.getCategory().getId(), p.getCategory().getName(),
                     p.getShortDescription(), p.getDescription(), p.getPrice(),
-                    p.getMaterial(), p.getColour(), p.getDimensions(), p.getCareInstructions(),
+                    p.getAuthor(), p.getCategory().getAuthorLabel(), attributes,
                     p.getStockQuantity(), p.getLowStockThreshold(), p.isFeatured(),
                     p.getStatus(), p.isPlaceholderContent(), p.getVersion(),
                     p.getVendor() == null ? null : p.getVendor().getId(),
@@ -151,10 +162,10 @@ public final class AdminProductDtos {
             @Digits(integer = 8, fraction = 2, message = "Enter a price with at most two decimals")
             BigDecimal price,
 
-            @Size(max = 160) String material,
-            @Size(max = 120) String colour,
-            @Size(max = 160) String dimensions,
-            String careInstructions,
+            @Size(max = 200) String author,
+
+            /** Keyed by attribute slug; anything blank is cleared. */
+            Map<String, String> attributes,
 
             @Min(value = 0, message = "Stock cannot be negative")
             @Max(value = 100000, message = "That stock figure is too large")
