@@ -55,9 +55,14 @@ jobs:
             echo "DEPLOY_HOST is not set. Add it under Settings -> Secrets and variables -> Actions -> Variables." >&2
             exit 1
           fi
+          # Invoked through bash rather than executed. The checkout on the
+          # server can predate the commit that marked the script executable,
+          # and it fails before it can fetch the fix - so the deploy that would
+          # repair the exec bit is the one that cannot run. Naming the
+          # interpreter removes the dependency on the mode entirely.
           ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes \
               "$SSH_USER@$SSH_HOST" \
-              'APP_DIR=/opt/karvya /opt/karvya/scripts/deploy.sh'
+              'APP_DIR=/opt/karvya bash /opt/karvya/scripts/deploy.sh'
 
       - name: Report
         if: always()
