@@ -313,15 +313,17 @@ Then check `https://karvya.in` and sign in at `/admin/login`.
 
 ### 6. Deploy on push
 
-The `Deploy` workflow runs after CI succeeds on `main`. Add three repository
-secrets under **Settings → Secrets and variables → Actions**:
+The `Deploy` workflow runs after CI succeeds on `main`. Under **Settings →
+Secrets and variables → Actions**, add one secret and the rest as variables — a
+hostname is not a secret, and keeping it a variable means it is readable in logs
+and editable without rotating anything.
 
-| Secret | Value |
-|---|---|
-| `EC2_HOST` | The Elastic IP or hostname. |
-| `EC2_USER` | `ubuntu`. |
-| `EC2_SSH_KEY` | A private key **for deployment only**, not your personal one. |
-| `EC2_KNOWN_HOSTS` | Output of `ssh-keyscan <elastic-ip>`. |
+| | Name | Value |
+|---|---|---|
+| Secret | `DEPLOY_SSH_KEY` | A private key **for deployment only**, not your personal one. |
+| Variable | `DEPLOY_HOST` | The Elastic IP or hostname. |
+| Variable | `DEPLOY_KNOWN_HOSTS` | Output of `ssh-keyscan <elastic-ip>`. |
+| Variable | `DEPLOY_USER` | Optional; defaults to `ubuntu`. |
 
 Generate a deployment key rather than reusing `karvyapem.pem`:
 

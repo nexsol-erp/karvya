@@ -13,31 +13,76 @@ const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Karvya_admin_2026';
 /** Used only when the account still owes a password change. */
 const REPLACEMENT_PASSWORD = process.env.E2E_ADMIN_NEW_PASSWORD ?? 'E2e_replacement_2026';
 
+/** Submits the sign-in form and reports whether the account was accepted. */
+async function attemptSignIn(page: Page, password: string): Promise<boolean> {
+  await page.goto('/admin/login');
+  await page.getByLabel('Email address').fill(ADMIN_EMAIL);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  // Wait for the outcome rather than reading the URL straight after the click.
+  // The click resolves when the event is dispatched, not when the new URL is in
+  // place, so an immediate read still sees /admin/login and every branch taken
+  // from it is a coin toss. Rejected credentials leave the page where it is,
+  // which is why this resolves false on timeout instead of throwing.
+  return page
+    .waitForURL(/\/admin(\/change-password)?(\?|$)/, { timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
+}
+
 /**
  * Signs in to the back office, replacing the bootstrap password if the account
  * is still carrying it.
  *
  * <p>On a fresh deployment - which is exactly what CI builds - the first
  * administrator is created with mustChangePassword set, so signing in lands on
- * the change screen rather than the dashboard. A helper that assumed otherwise
- * would pass locally and fail on every clean environment.
+ * the change screen rather than the dashboard.
+ *
+ * <p>Which means this helper rotates the password the first time it runs, and
+ * the bootstrap one stops working from then on. CI never noticed because every
+ * run gets an empty database; locally it broke every run after the first. So
+ * both are tried, and the run is not required to know which state it inherited.
  */
 async function signInAsAdmin(page: Page) {
-  await page.goto('/admin/login');
-  await page.getByLabel('Email address').fill(ADMIN_EMAIL);
-  await page.getByLabel('Password').fill(ADMIN_PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  let current = ADMIN_PASSWORD;
+  let signedIn = await attemptSignIn(page, current);
+
+  if (!signedIn) {
+    // a previous run against this same database already rotated it
+    current = REPLACEMENT_PASSWORD;
+    signedIn = await attemptSignIn(page, current);
+  }
+
+  expect(
+    signedIn,
+    `neither the bootstrap password nor the replacement was accepted for ${ADMIN_EMAIL}. ` +
+      'Set E2E_ADMIN_PASSWORD to whatever this environment actually uses.',
+  ).toBe(true);
+
+  // Wait for a screen, not for a URL. Sign-in lands on /admin and the guard
+  // then redirects to /admin/change-password when one is owed, so the URL is
+  // briefly the dashboard's on the way to the change screen. Branching on a URL
+  // snapshot catches that intermediate value and skips the change it was meant
+  // to detect. Whichever heading appears settles it, with no fixed wait on
+  // either path.
+  await expect(
+    page.getByRole('heading', { name: /choose a new password|dashboard/i }),
+  ).toBeVisible();
 
   if (/\/admin\/change-password/.test(page.url())) {
-    await page.getByLabel('Current password').fill(ADMIN_PASSWORD);
-    await page.getByLabel('New password', { exact: false }).first().fill(REPLACEMENT_PASSWORD);
-    await page.getByLabel('Confirm new password').fill(REPLACEMENT_PASSWORD);
+    // Whichever of the two got us in is the one the account holds, and the new
+    // one is the other. Assuming the bootstrap password here would fail on any
+    // account that owes a change while already carrying the replacement.
+    const next = current === ADMIN_PASSWORD ? REPLACEMENT_PASSWORD : ADMIN_PASSWORD;
+
+    await page.getByLabel('Current password').fill(current);
+    await page.getByLabel('New password', { exact: false }).first().fill(next);
+    await page.getByLabel('Confirm new password').fill(next);
     await page.getByRole('button', { name: /save and sign in again/i }).click();
 
     await expect(page).toHaveURL(/\/admin\/login/);
-    await page.getByLabel('Email address').fill(ADMIN_EMAIL);
-    await page.getByLabel('Password').fill(REPLACEMENT_PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    expect(await attemptSignIn(page, next)).toBe(true);
   }
 
   await expect(page).toHaveURL(/\/admin(\?|$)/);

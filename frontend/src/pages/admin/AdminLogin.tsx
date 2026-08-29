@@ -23,7 +23,17 @@ export function AdminLogin() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const redirectTo = (location.state as { from?: string } | null)?.from ?? '/admin';
+  const requested = (location.state as { from?: string } | null)?.from;
+
+  // Never send anyone back to the change-password screen.
+  //
+  // Changing a password signs the session out while that screen is still
+  // mounted, so the admin guard records it as the page the user was trying to
+  // reach. Honouring that puts them back on the change form immediately after
+  // they succeeded at it - with the fields empty and nothing explaining why.
+  // Whether another change is owed is the server's call, handled below.
+  const redirectTo =
+    requested && !requested.startsWith('/admin/change-password') ? requested : '/admin';
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

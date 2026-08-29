@@ -34,9 +34,8 @@ jobs:
     steps:
       - name: Open an SSH session
         env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          SSH_HOST: ${{ secrets.EC2_HOST }}
-          SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
@@ -49,9 +48,13 @@ jobs:
 
       - name: Deploy
         env:
-          SSH_HOST: ${{ secrets.EC2_HOST }}
-          SSH_USER: ${{ secrets.EC2_USER }}
+          SSH_HOST: ${{ vars.DEPLOY_HOST }}
+          SSH_USER: ${{ vars.DEPLOY_USER || 'ubuntu' }}
         run: |
+          if [ -z "$SSH_HOST" ]; then
+            echo "DEPLOY_HOST is not set. Add it under Settings -> Secrets and variables -> Actions -> Variables." >&2
+            exit 1
+          fi
           ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes \
               "$SSH_USER@$SSH_HOST" \
               'APP_DIR=/opt/karvya /opt/karvya/scripts/deploy.sh'
