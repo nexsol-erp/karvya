@@ -61,8 +61,14 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new ApiError(response.status, problem, `Request failed with status ${response.status}`);
   }
 
-  if (response.status === 204) {
+  // Any empty body, not only 204. A 202 that accepts a message and returns
+  // nothing is just as bodiless, and parsing it as JSON threw a syntax error
+  // that surfaced as "could not be sent" on a request that had in fact
+  // succeeded - the worst way to be wrong, because the caller retries.
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
     return undefined as T;
   }
-  return (await response.json()) as T;
+
+  const body = await response.text();
+  return (body ? JSON.parse(body) : undefined) as T;
 }
