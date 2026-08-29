@@ -10,6 +10,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
+import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Skeleton from '@mui/material/Skeleton';
 import Link from '@mui/material/Link';
@@ -311,6 +312,92 @@ export function AdminOrderDetail() {
                       )}
                     </Box>
                   </Stack>
+                ))}
+              </Stack>
+            </Card>
+
+            {/* ---- where to reorder from ---- */}
+            <Card sx={{ p: 2 }}>
+              <Typography variant="h6" component="h2" sx={{ fontSize: '1rem' }}>
+                Suppliers
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 1.5 }}>
+                Who to order each line from. Internal — the customer never sees this.
+              </Typography>
+
+              <Stack spacing={2} divider={<Divider flexItem />}>
+                {detail.supply.map((line, index) => (
+                  <Box key={`${line.productSku}-${index}`}>
+                    <Stack
+                      direction="row"
+                      sx={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}
+                    >
+                      <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+                        {line.quantity} × {line.productName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 11.5 }}>
+                        {line.productSku}
+                      </Typography>
+                    </Stack>
+
+                    {line.vendorName ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ alignItems: 'center', flexWrap: 'wrap', mb: 0.5 }}
+                        >
+                          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+                            {line.vendorName}
+                          </Typography>
+                          {line.contactName && (
+                            <Typography variant="body2">({line.contactName})</Typography>
+                          )}
+                          {line.vendorPrice != null && (
+                            <Chip
+                              size="small" variant="outlined"
+                              label={`${money(line.vendorPrice)} each`}
+                              sx={{ height: 18, fontSize: 10 }}
+                            />
+                          )}
+                        </Stack>
+
+                        <Stack spacing={0.25}>
+                          {line.phone && (
+                            <Typography variant="body2">
+                              <Link href={`tel:${line.phone}`}>{line.phone}</Link>
+                            </Typography>
+                          )}
+                          {line.email && (
+                            <Typography variant="body2">
+                              <Link href={`mailto:${line.email}`}>{line.email}</Link>
+                            </Typography>
+                          )}
+                          {line.address && (
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                              {line.address}
+                            </Typography>
+                          )}
+                          {line.deliveryTime && (
+                            <Typography variant="body2">
+                              <strong>Delivery:</strong> {line.deliveryTime}
+                            </Typography>
+                          )}
+                          {line.conditions && (
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                              <strong>Terms:</strong> {line.conditions}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" sx={{ mt: 0.5 }}>
+                        {line.productGone
+                          ? 'This product has since been deleted, so there is nothing to look up.'
+                          : 'No supplier recorded. Set one on the product to see it here.'}
+                      </Typography>
+                    )}
+                  </Box>
                 ))}
               </Stack>
             </Card>

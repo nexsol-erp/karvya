@@ -37,6 +37,25 @@ public class Product extends Auditable {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    /**
+     * Who supplies this piece. Optional: the seeded catalogue has none, and a
+     * shop may make something itself.
+     *
+     * <p>Lazy, and never reached from a storefront query. The supplier and the
+     * price paid to them are the shop's business, not the shopper's.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_id")
+    private Vendor vendor;
+
+    /** What the shop pays for it, as opposed to what it sells for. */
+    @Column(name = "vendor_price", precision = 10, scale = 2)
+    private BigDecimal vendorPrice;
+
+    /** Overrides the vendor's usual lead time when this piece differs. */
+    @Column(name = "vendor_delivery_time", length = 160)
+    private String vendorDeliveryTime;
+
     @Column(name = "short_description", length = 400)
     private String shortDescription;
 
@@ -167,6 +186,12 @@ public class Product extends Auditable {
     public void setName(String name) { this.name = name; }
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
+    public Vendor getVendor() { return vendor; }
+    public void setVendor(Vendor vendor) { this.vendor = vendor; }
+    public BigDecimal getVendorPrice() { return vendorPrice; }
+    public void setVendorPrice(BigDecimal vendorPrice) { this.vendorPrice = vendorPrice; }
+    public String getVendorDeliveryTime() { return vendorDeliveryTime; }
+    public void setVendorDeliveryTime(String v) { this.vendorDeliveryTime = v; }
     public String getShortDescription() { return shortDescription; }
     public void setShortDescription(String v) { this.shortDescription = v; }
     public String getDescription() { return description; }

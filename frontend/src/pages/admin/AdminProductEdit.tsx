@@ -33,6 +33,7 @@ import {
   deleteProductImage,
   getProduct,
   listCategories,
+  listVendors,
   reorderProductImages,
   saveProduct,
   uploadProductImage,
@@ -62,6 +63,9 @@ const BLANK = {
   featured: false,
   status: 'DRAFT' as ProductStatus,
   placeholderContent: false,
+  vendorId: '',
+  vendorPrice: '',
+  vendorDeliveryTime: '',
 };
 
 type Form = typeof BLANK;
@@ -84,6 +88,9 @@ function toForm(product: AdminProductDetail): Form {
     featured: product.featured,
     status: product.status,
     placeholderContent: product.placeholderContent,
+    vendorId: product.vendorId == null ? '' : String(product.vendorId),
+    vendorPrice: product.vendorPrice == null ? '' : String(product.vendorPrice),
+    vendorDeliveryTime: product.vendorDeliveryTime ?? '',
   };
 }
 
@@ -115,6 +122,7 @@ export function AdminProductEdit() {
   const [altText, setAltText] = useState('');
 
   const categories = useQuery({ queryKey: adminKeys.categories, queryFn: listCategories });
+  const vendors = useQuery({ queryKey: adminKeys.vendors, queryFn: listVendors });
   const existing = useQuery({
     queryKey: adminKeys.product(productId ?? 0),
     queryFn: () => getProduct(productId as number),
@@ -171,6 +179,9 @@ export function AdminProductEdit() {
         categoryId: form.categoryId === '' ? null : Number(form.categoryId),
         stockQuantity: Number(form.stockQuantity),
         lowStockThreshold: Number(form.lowStockThreshold),
+        // empty means "we make this ourselves", which has to be expressible
+        vendorId: form.vendorId === '' ? null : Number(form.vendorId),
+        vendorPrice: form.vendorPrice.trim() === '' ? null : form.vendorPrice.trim(),
         // the slug is derived from the name when left empty
         slug: form.slug.trim(),
         // carries the optimistic lock, so a save over someone else's is refused
@@ -414,6 +425,60 @@ export function AdminProductEdit() {
                 label="Care instructions" value={form.careInstructions}
                 onChange={set('careInstructions')} multiline minRows={2} fullWidth
               />
+
+              <Divider />
+
+              <Box>
+                <Typography variant="h6" component="h3" sx={{ fontSize: '0.95rem' }}>
+                  Supplier
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1.5 }}>
+                  Internal only. None of this reaches the shop — it appears on the
+                  order page so you know who to reorder from.
+                </Typography>
+
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      select label="Bought from" value={form.vendorId}
+                      onChange={set('vendorId')} fullWidth
+                      helperText={
+                        (vendors.data?.length ?? 0) === 0
+                          ? 'No suppliers yet — add one under Suppliers'
+                          : 'Leave empty if you make this yourself'
+                      }
+                    >
+                      <MenuItem value="">We make it ourselves</MenuItem>
+                      {(vendors.data ?? [])
+                        // an inactive supplier stays selectable on products that
+                        // already use it, but is not offered for new ones
+                        .filter((v) => v.active || String(v.id) === form.vendorId)
+                        .map((vendor) => (
+                          <MenuItem key={vendor.id} value={String(vendor.id)}>
+                            {vendor.name}{vendor.active ? '' : ' (inactive)'}
+                          </MenuItem>
+                        ))}
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <TextField
+                      label="Price paid" value={form.vendorPrice} onChange={set('vendorPrice')}
+                      error={Boolean(fieldErrors.vendorPrice)}
+                      helperText={fieldErrors.vendorPrice ?? 'What it costs you'}
+                      fullWidth inputMode="decimal"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <TextField
+                      label="Delivery time" value={form.vendorDeliveryTime}
+                      onChange={set('vendorDeliveryTime')}
+                      error={Boolean(fieldErrors.vendorDeliveryTime)}
+                      helperText={fieldErrors.vendorDeliveryTime ?? 'Only if it differs'}
+                      fullWidth
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flexWrap: 'wrap' }}>
                 <FormControlLabel

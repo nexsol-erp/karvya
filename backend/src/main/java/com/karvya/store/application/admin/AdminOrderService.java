@@ -250,7 +250,40 @@ public class AdminOrderService {
                 payments.findByOrderIdOrderByReceivedOnAscIdAsc(order.getId())
                         .stream().map(AdminOrderDtos.Payment::from).toList(),
                 List.copyOf(order.getStatus().allowedNext()),
-                List.copyOf(order.getPaymentStatus().allowedNext()));
+                List.copyOf(order.getPaymentStatus().allowedNext()),
+                supplyFor(order));
+    }
+
+    /**
+     * Who to order each line from.
+     *
+     * <p>A line whose product has since been deleted still appears, marked, so
+     * the order reads completely - an empty row would look like a rendering
+     * fault rather than a deleted product.
+     */
+    private List<AdminOrderDtos.Supply> supplyFor(CustomerOrder order) {
+        return order.getItems().stream().map(item -> {
+            Product product = item.getProduct();
+            Vendor vendor = product == null ? null : product.getVendor();
+
+            return new AdminOrderDtos.Supply(
+                    item.getProductSku(),
+                    item.getProductName(),
+                    item.getQuantity(),
+                    vendor == null ? null : vendor.getName(),
+                    vendor == null ? null : vendor.getContactName(),
+                    vendor == null ? null : vendor.getEmail(),
+                    vendor == null ? null : vendor.getPhone(),
+                    vendor == null ? null : vendor.getAddress(),
+                    // the product may quote its own lead time when it differs
+                    // from whatever the supplier usually says
+                    product != null && product.getVendorDeliveryTime() != null
+                            ? product.getVendorDeliveryTime()
+                            : (vendor == null ? null : vendor.getDeliveryTime()),
+                    vendor == null ? null : vendor.getConditions(),
+                    product == null ? null : product.getVendorPrice(),
+                    product == null);
+        }).toList();
     }
 
     private String blankToNull(String value) {

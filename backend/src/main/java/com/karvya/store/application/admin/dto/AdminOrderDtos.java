@@ -51,7 +51,38 @@ public final class AdminOrderDtos {
             Instant stockRestoredAt,
             List<Payment> payments,
             List<OrderStatus> allowedStatuses,
-            List<PaymentStatus> allowedPaymentStatuses
+            List<PaymentStatus> allowedPaymentStatuses,
+            /** Who to order each line from. Admin only; see Supply. */
+            List<Supply> supply
+    ) {
+    }
+
+    /**
+     * Where one ordered line comes from.
+     *
+     * <p>Hangs off the administrative view rather than the order line itself,
+     * because the order line is shared with the customer's own confirmation
+     * page. Putting a supplier's phone number and the price paid for the piece
+     * on that record would publish both to the shopper.
+     *
+     * <p>Read from the product as it stands now, not snapshotted at the time of
+     * the order. The question this answers is "who do I order this from today",
+     * and that is the current supplier - not whoever it was last winter.
+     */
+    public record Supply(
+            String productSku,
+            String productName,
+            int quantity,
+            String vendorName,
+            String contactName,
+            String email,
+            String phone,
+            String address,
+            String deliveryTime,
+            String conditions,
+            BigDecimal vendorPrice,
+            /** Set when the product was deleted, so the line has nothing to look up. */
+            boolean productGone
     ) {
     }
 

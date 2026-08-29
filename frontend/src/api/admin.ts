@@ -80,6 +80,7 @@ export interface AdminOrderDetail {
   payments: OfflinePaymentView[];
   /** Only the transitions currently legal, so the UI offers nothing else. */
   allowedStatuses: OrderStatus[];
+  supply: OrderSupply[];
   allowedPaymentStatuses: PaymentStatus[];
 }
 
@@ -126,6 +127,43 @@ export interface AdminProductImage {
   formats: string[];
 }
 
+/** Suppliers. Admin only - none of this is on any public endpoint. */
+export interface VendorRow {
+  id: number;
+  name: string;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  deliveryTime: string | null;
+  active: boolean;
+  productCount: number;
+  updatedAt: string;
+}
+
+export interface VendorDetail extends Omit<VendorRow, 'updatedAt'> {
+  address: string | null;
+  conditions: string | null;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy: string | null;
+}
+
+/** Where one ordered line comes from. Present only on the admin order view. */
+export interface OrderSupply {
+  productSku: string;
+  productName: string;
+  quantity: number;
+  vendorName: string | null;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  deliveryTime: string | null;
+  conditions: string | null;
+  vendorPrice: string | number | null;
+  productGone: boolean;
+}
+
 export interface AdminProductDetail {
   id: number;
   sku: string;
@@ -147,6 +185,10 @@ export interface AdminProductDetail {
   placeholderContent: boolean;
   /** Sent back on save so a stale edit is refused rather than overwriting. */
   version: number;
+  vendorId: number | null;
+  vendorName: string | null;
+  vendorPrice: string | number | null;
+  vendorDeliveryTime: string | null;
   images: AdminProductImage[];
   createdAt: string;
   updatedAt: string;
@@ -208,6 +250,7 @@ export const adminKeys = {
     ['admin', 'products', q, status, page] as const,
   product: (id: number) => ['admin', 'product', id] as const,
   categories: ['admin', 'categories'] as const,
+  vendors: ['admin', 'vendors'] as const,
   settings: ['admin', 'settings'] as const,
   customers: (q: string, page: number) => ['admin', 'customers', q, page] as const,
   customer: (id: number) => ['admin', 'customer', id] as const,
@@ -356,6 +399,39 @@ export const deleteProductImage = (id: number, imageId: number): Promise<AdminPr
   });
 
 export const listCategories = (): Promise<AdminCategory[]> => apiFetch('/admin/categories');
+
+export const saveCategory = (
+  id: number | null,
+  body: Record<string, unknown>,
+): Promise<AdminCategory> =>
+  apiFetch(id === null ? '/admin/categories' : `/admin/categories/${id}`, {
+    method: id === null ? 'POST' : 'PUT',
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+
+export const setCategoryActive = (id: number, active: boolean): Promise<AdminCategory> =>
+  apiFetch(`/admin/categories/${id}/active?active=${active}`, {
+    method: 'PATCH',
+    headers: jsonHeaders(),
+  });
+
+export const listVendors = (): Promise<VendorRow[]> => apiFetch('/admin/vendors');
+
+export const getVendor = (id: number): Promise<VendorDetail> => apiFetch(`/admin/vendors/${id}`);
+
+export const saveVendor = (
+  id: number | null,
+  body: Record<string, unknown>,
+): Promise<VendorDetail> =>
+  apiFetch(id === null ? '/admin/vendors' : `/admin/vendors/${id}`, {
+    method: id === null ? 'POST' : 'PUT',
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+
+export const deleteVendor = (id: number): Promise<void> =>
+  apiFetch(`/admin/vendors/${id}`, { method: 'DELETE', headers: csrfHeader() });
 
 export const listSettings = (): Promise<SettingView[]> => apiFetch('/admin/settings');
 

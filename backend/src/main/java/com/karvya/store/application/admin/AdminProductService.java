@@ -46,11 +46,12 @@ public class AdminProductService {
     private final StorageService storage;
     private final ImageUploadValidator validator;
     private final ImageRenditionService renditions;
+    private final VendorRepository vendors;
 
     public AdminProductService(ProductRepository products, CategoryRepository categories,
                                ProductImageRepository images, OrderItemRepository orderItems,
                                StorageService storage, ImageUploadValidator validator,
-                               ImageRenditionService renditions) {
+                               ImageRenditionService renditions, VendorRepository vendors) {
         this.products = products;
         this.categories = categories;
         this.images = images;
@@ -58,6 +59,7 @@ public class AdminProductService {
         this.storage = storage;
         this.validator = validator;
         this.renditions = renditions;
+        this.vendors = vendors;
     }
 
     // ---- reading ----------------------------------------------------------
@@ -296,6 +298,16 @@ public class AdminProductService {
         product.setFeatured(request.featured());
         product.setStatus(request.status());
         product.setPlaceholderContent(request.placeholderContent());
+
+        // Cleared rather than left alone when no supplier is chosen: "made by
+        // us" has to be expressible, and silently keeping the previous one
+        // would make it impossible to undo an assignment.
+        product.setVendor(request.vendorId() == null ? null
+                : vendors.findById(request.vendorId())
+                        .orElseThrow(() -> new NotFoundException(
+                                "Vendor", String.valueOf(request.vendorId()))));
+        product.setVendorPrice(request.vendorPrice());
+        product.setVendorDeliveryTime(blankToNull(request.vendorDeliveryTime()));
         product.setUpdatedBy(actor);
     }
 

@@ -80,6 +80,10 @@ public final class AdminProductDtos {
             ProductStatus status,
             boolean placeholderContent,
             long version,
+            Long vendorId,
+            String vendorName,
+            BigDecimal vendorPrice,
+            String vendorDeliveryTime,
             List<Image> images,
             Instant createdAt,
             Instant updatedAt,
@@ -93,6 +97,10 @@ public final class AdminProductDtos {
                     p.getMaterial(), p.getColour(), p.getDimensions(), p.getCareInstructions(),
                     p.getStockQuantity(), p.getLowStockThreshold(), p.isFeatured(),
                     p.getStatus(), p.isPlaceholderContent(), p.getVersion(),
+                    p.getVendor() == null ? null : p.getVendor().getId(),
+                    p.getVendor() == null ? null : p.getVendor().getName(),
+                    p.getVendorPrice(),
+                    p.getVendorDeliveryTime(),
                     // Sorted here rather than relying on @OrderBy, which only
                     // applies when the collection is loaded from the database.
                     // After a reorder the managed list is still in its old
@@ -162,6 +170,16 @@ public final class AdminProductDtos {
 
             /** Cleared once a human has reviewed the seeded copy. */
             boolean placeholderContent,
+
+            /** Who supplies it. Null for something the shop makes itself. */
+            Long vendorId,
+
+            @DecimalMin(value = "0.00", message = "A supplier price cannot be negative")
+            @Digits(integer = 8, fraction = 2, message = "Enter a price with at most two decimals")
+            BigDecimal vendorPrice,
+
+            @Size(max = 160, message = "Keep the delivery time short, e.g. '2 to 3 weeks'")
+            String vendorDeliveryTime,
 
             Long version
     ) {
