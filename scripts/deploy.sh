@@ -18,7 +18,6 @@
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/karvya}"
-COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.prod.yml)
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 
 cd "$APP_DIR"
@@ -26,6 +25,23 @@ cd "$APP_DIR"
 if [[ ! -f .env ]]; then
     echo "No .env in $APP_DIR. Copy .env.example and fill it in before deploying." >&2
     exit 1
+fi
+
+# TLS is switched on by having a domain, not by a separate command.
+#
+# Caddy cannot get a certificate until the name resolves here and 443 is open,
+# and it redirects http to https the moment it starts - so bringing it up too
+# early takes the site down rather than securing it. Leave SITE_DOMAIN empty to
+# serve plain HTTP on port 80, fill it in when DNS and the security group are
+# ready, and deploy again.
+site_domain="$(grep -E '^SITE_DOMAIN=' .env | cut -d= -f2- | tr -d '"' | xargs || true)"
+
+if [[ -n "$site_domain" ]]; then
+    COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.prod.yml)
+    echo "==> TLS mode: Caddy will serve $site_domain"
+else
+    COMPOSE=(docker compose -f docker-compose.yml)
+    echo "==> plain HTTP: SITE_DOMAIN is empty, so nginx serves port 80 directly"
 fi
 
 previous="$(git rev-parse --short HEAD)"
