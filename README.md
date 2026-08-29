@@ -223,11 +223,20 @@ it, and a push to `main` deploys once CI is green.
 
 ### 1. The instance
 
-A `t3.small` on Ubuntu 24.04 is enough: the backend, PostgreSQL, nginx and
-Caddy together sit comfortably under 2 GB, and the Maven build during a deploy
-is the heaviest thing that happens. `t3.micro` will build very slowly and can
-run out of memory doing it. Give it 30 GB of gp3 — images and their layers
-accumulate faster than the data does.
+A `t3.small` (2 vCPU, 2 GB) on Ubuntu runs it, **with swap**. Running the shop
+is light; the Maven build during a deploy is not, and 2 GB is not enough for
+javac plus a Docker build plus PostgreSQL at the same time. Add 2 GB of swap
+before the first deploy:
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+The build is slow on a burstable instance and will spend CPU credits. If deploys
+become frequent, build the images in CI and pull them instead. Give it 30 GB of
+gp3 — images and their layers accumulate faster than the data does.
 
 Attach an **Elastic IP**. Without one the address changes on every stop/start
 and the DNS record — which the certificate depends on — silently goes stale.
@@ -281,9 +290,9 @@ The ones that matter, and what goes wrong if they are not right:
 
 | Variable | Set it to |
 |---|---|
-| `SITE_DOMAIN` | `shop.example.com`. Caddy requests the certificate for exactly this name. |
+| `SITE_DOMAIN` | `karvya.in`. Caddy requests one certificate covering it and `www.karvya.in`. |
 | `ACME_EMAIL` | A real address. Let's Encrypt writes here if renewal breaks. |
-| `APP_BASE_URL` | `https://shop.example.com`. Every link in every email is built from it — a wrong value sends customers to the wrong host, and nothing in the app will notice. |
+| `APP_BASE_URL` | `https://karvya.in`. Every link in every email is built from it — a wrong value sends customers to the wrong host, and nothing in the app will notice. |
 | `POSTGRES_PASSWORD` | Something generated. `openssl rand -base64 24`. |
 | `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD` | The first administrator, created on first boot **only**. Leave the password unset and no account is created. |
 | `SPRING_PROFILES_ACTIVE` | `prod`. |
@@ -300,7 +309,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose logs -f caddy    # watch the certificate being issued
 ```
 
-Then check `https://shop.example.com` and sign in at `/admin/login`.
+Then check `https://karvya.in` and sign in at `/admin/login`.
 
 ### 6. Deploy on push
 

@@ -17,7 +17,11 @@
 	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
 }
 
-{$SITE_DOMAIN} {
+# Both names, so a visitor typing either reaches the shop and neither shows a
+# certificate warning. Caddy requests one certificate covering both, which
+# means BOTH must resolve here before the first start or issuance fails for the
+# pair - a www record is not optional once it is listed.
+{$SITE_DOMAIN}, www.{$SITE_DOMAIN} {
 	# HSTS belongs on the terminator, not on nginx behind it: nginx never sees
 	# an https request and so cannot honestly assert the site is https-only.
 	# No preload directive - that submits the domain to a browser-shipped list
@@ -26,6 +30,12 @@
 
 	# Caddy announces itself in every response otherwise.
 	header -Server
+
+	# One canonical host. Two addresses serving identical pages splits search
+	# ranking and makes the session cookie host-specific, so a customer who
+	# drifts between them appears to be signed out.
+	@www host www.{$SITE_DOMAIN}
+	redir @www https://{$SITE_DOMAIN}{uri} permanent
 
 	# Caddy sets X-Forwarded-Proto, X-Forwarded-For and X-Forwarded-Host from
 	# the real request; nginx now prefers those over its own scheme.
