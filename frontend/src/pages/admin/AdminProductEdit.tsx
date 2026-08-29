@@ -27,6 +27,7 @@ import UploadIcon from '@mui/icons-material/UploadFile';
 
 import { SEOHead } from '../../components/common/SEOHead';
 import { ProductImage } from '../../components/common/ProductImage';
+import { NumberField } from '../../components/common/NumberField';
 import { ApiError } from '../../api/client';
 import {
   adminKeys,
@@ -374,26 +375,28 @@ export function AdminProductEdit() {
 
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label="Price" value={form.price} onChange={set('price')}
+                  <NumberField
+                    label="Price" value={form.price} decimal
+                    onChange={(v) => setForm((p) => ({ ...p, price: v }))}
                     error={Boolean(fieldErrors.price)} helperText={fieldErrors.price}
-                    required fullWidth inputMode="decimal"
+                    required fullWidth
                   />
                 </Grid>
                 <Grid size={{ xs: 6, sm: 4 }}>
-                  <TextField
-                    label="Stock" value={form.stockQuantity} onChange={set('stockQuantity')}
+                  <NumberField
+                    label="Stock" value={form.stockQuantity}
+                    onChange={(v) => setForm((p) => ({ ...p, stockQuantity: v }))}
                     error={Boolean(fieldErrors.stockQuantity)} helperText={fieldErrors.stockQuantity}
-                    required fullWidth inputMode="numeric"
+                    required fullWidth
                   />
                 </Grid>
                 <Grid size={{ xs: 6, sm: 4 }}>
-                  <TextField
+                  <NumberField
                     label="Low stock at" value={form.lowStockThreshold}
-                    onChange={set('lowStockThreshold')}
+                    onChange={(v) => setForm((p) => ({ ...p, lowStockThreshold: v }))}
                     error={Boolean(fieldErrors.lowStockThreshold)}
                     helperText={fieldErrors.lowStockThreshold}
-                    required fullWidth inputMode="numeric"
+                    required fullWidth
                   />
                 </Grid>
               </Grid>
@@ -461,11 +464,12 @@ export function AdminProductEdit() {
                     </TextField>
                   </Grid>
                   <Grid size={{ xs: 6, sm: 3 }}>
-                    <TextField
-                      label="Price paid" value={form.vendorPrice} onChange={set('vendorPrice')}
+                    <NumberField
+                      label="Price paid" value={form.vendorPrice} decimal
+                      onChange={(v) => setForm((p) => ({ ...p, vendorPrice: v }))}
                       error={Boolean(fieldErrors.vendorPrice)}
                       helperText={fieldErrors.vendorPrice ?? 'What it costs you'}
-                      fullWidth inputMode="decimal"
+                      fullWidth
                     />
                   </Grid>
                   <Grid size={{ xs: 6, sm: 3 }}>

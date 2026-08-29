@@ -19,6 +19,7 @@ import { catalogKeys, searchProducts, getCategories } from '../api/catalog';
 import { ProductGrid } from '../components/catalog/ProductGrid';
 import { EmptyState } from '../components/common/EmptyState';
 import { SEOHead } from '../components/common/SEOHead';
+import { NumberField } from '../components/common/NumberField';
 import type { ProductSort, ProductSummary } from '../api/types';
 
 const SORTS: { value: ProductSort; label: string }[] = [
@@ -177,26 +178,24 @@ export function Shop() {
           )}
 
           <Grid size={{ xs: 6, sm: 3, md: 1.5 }}>
-            <TextField
+            <NumberField
               fullWidth
               size="small"
               label="Min price"
-              type="number"
+              decimal
               value={minPrice}
-              onChange={(e) => setFilter('minPrice', e.target.value)}
-              slotProps={{ htmlInput: { min: 0, inputMode: 'numeric' } }}
+              onChange={(value) => setFilter('minPrice', value)}
             />
           </Grid>
 
           <Grid size={{ xs: 6, sm: 3, md: 1.5 }}>
-            <TextField
+            <NumberField
               fullWidth
               size="small"
               label="Max price"
-              type="number"
+              decimal
               value={maxPrice}
-              onChange={(e) => setFilter('maxPrice', e.target.value)}
-              slotProps={{ htmlInput: { min: 0, inputMode: 'numeric' } }}
+              onChange={(value) => setFilter('maxPrice', value)}
             />
           </Grid>
 

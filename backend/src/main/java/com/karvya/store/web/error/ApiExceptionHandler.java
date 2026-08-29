@@ -1,6 +1,7 @@
 package com.karvya.store.web.error;
 
 import com.karvya.store.domain.DomainException;
+import com.karvya.store.domain.FieldValidationException;
 import com.karvya.store.domain.NotFoundException;
 import com.karvya.store.domain.TooManyRequestsException;
 import com.karvya.store.application.order.CheckoutValidationException;
@@ -74,6 +75,23 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = problem(HttpStatus.CONFLICT, "Your cart changed",
                 ex.getMessage(), ex.code(), request);
         problem.setProperty("adjustments", ex.adjustments());
+        return problem;
+    }
+
+    /**
+     * A value rejected by a service rather than by an annotation.
+     *
+     * <p>Rendered identically to a bean-validation failure - same status, same
+     * "errors" map - so the interface has one way to mark a bad input rather
+     * than two, and neither the client nor the reader has to care which layer
+     * did the checking.
+     */
+    @ExceptionHandler(FieldValidationException.class)
+    public ProblemDetail handleFieldValidation(FieldValidationException ex,
+                                               HttpServletRequest request) {
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "Validation failed",
+                ex.getMessage(), ex.code(), request);
+        problem.setProperty("errors", ex.errors());
         return problem;
     }
 

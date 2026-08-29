@@ -105,9 +105,10 @@ class AppearanceSettingsIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("something that is not a colour is refused, and nothing is written")
     void refusesRubbishColour() throws Exception {
         putSettings(adminSession(), Map.of(SettingsService.COLOUR_PRIMARY, "reddish"))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.type")
-                        .value("https://karvya.example/problems/invalid-setting-value"));
+                // a malformed value is a validation failure, reported against the
+                // field so the Appearance screen can mark it
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors['theme.colour_primary']").isNotEmpty());
 
         mockMvc.perform(get("/api/v1/settings/public"))
                 .andExpect(jsonPath("$.colourPrimary").value("#A33B2E"));
@@ -123,7 +124,8 @@ class AppearanceSettingsIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("a typeface outside the permitted list is refused")
     void refusesUnknownFont() throws Exception {
         putSettings(adminSession(), Map.of(SettingsService.FONT_HEADING, "Comic Sans MS"))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors['theme.font_heading']").isNotEmpty());
 
         mockMvc.perform(get("/api/v1/settings/public"))
                 .andExpect(jsonPath("$.fontHeading").value("Fraunces"));

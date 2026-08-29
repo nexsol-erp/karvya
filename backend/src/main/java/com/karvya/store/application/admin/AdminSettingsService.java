@@ -5,6 +5,7 @@ import com.karvya.store.application.settings.ThemeFonts;
 import com.karvya.store.application.notification.EmailSender;
 import com.karvya.store.infrastructure.mail.MailSenderProvider;
 import com.karvya.store.domain.ConflictException;
+import com.karvya.store.domain.FieldValidationException;
 import com.karvya.store.domain.NotFoundException;
 import com.karvya.store.domain.model.SettingType;
 import com.karvya.store.domain.model.SiteSetting;
@@ -110,8 +111,13 @@ public class AdminSettingsService {
         Map<String, SiteSetting> known = repository.findAllByOrderByKeyAsc().stream()
                 .collect(java.util.stream.Collectors.toMap(SiteSetting::getKey, s -> s));
 
-        // validate the whole batch before touching anything
+        // Validate the whole batch before touching anything, and collect every
+        // failure rather than stopping at the first. A form with three bad
+        // values should be correctable in one pass, and the interface needs to
+        // know which fields to mark - not just that something was wrong.
         Map<String, String> cleaned = new java.util.LinkedHashMap<>();
+        Map<String, String> problems = new java.util.LinkedHashMap<>();
+
         for (Map.Entry<String, String> entry : values.entrySet()) {
             SiteSetting setting = known.get(entry.getKey());
             if (setting == null) {
@@ -126,7 +132,15 @@ public class AdminSettingsService {
                 continue;
             }
 
-            cleaned.put(entry.getKey(), coerce(setting, entry.getValue()));
+            try {
+                cleaned.put(entry.getKey(), coerce(setting, entry.getValue()));
+            } catch (ConflictException e) {
+                problems.put(entry.getKey(), e.getMessage());
+            }
+        }
+
+        if (!problems.isEmpty()) {
+            throw new FieldValidationException(problems);
         }
 
         cleaned.forEach((key, value) -> known.get(key).setValue(value, actor));
@@ -245,8 +259,12 @@ public class AdminSettingsService {
         };
     }
 
+    /**
+     * The message shown under the offending field, so it does not repeat the
+     * key the field is already labelled with. The key is added back by
+     * FieldValidationException when a single failure is summarised as a banner.
+     */
     private ConflictException invalid(SiteSetting setting, String expected) {
-        return new ConflictException("invalid-setting-value",
-                "'" + setting.getKey() + "' needs " + expected + ".");
+        return new ConflictException("invalid-setting-value", "Needs " + expected + ".");
     }
 }

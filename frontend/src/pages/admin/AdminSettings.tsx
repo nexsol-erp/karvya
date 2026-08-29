@@ -14,10 +14,11 @@ import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 
 import { SEOHead } from '../../components/common/SEOHead';
+import { NumberField } from '../../components/common/NumberField';
+import { ApiError } from '../../api/client';
 import { adminKeys, listSettings, saveSettings, sendTestEmail } from '../../api/admin';
 import type { MailTestResult } from '../../api/admin';
 import type { SettingView } from '../../api/admin';
-import { ApiError } from '../../api/client';
 
 /**
  * Groups settings by their key prefix, so the form reads as sections rather
@@ -40,6 +41,7 @@ export function AdminSettings() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
   const [testResult, setTestResult] = useState<MailTestResult | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Reports a delivery failure rather than throwing: a refused login is an
   // answer, not an error, and the provider's own wording is the useful part.
@@ -68,12 +70,22 @@ export function AdminSettings() {
       setDraft(Object.fromEntries(updated.map((s) => [s.key, s.value ?? ''])));
       setMessage({ tone: 'success', text: 'Settings saved.' });
     },
-    onError: (err) =>
+    onError: (err) => {
+      // Every rejected value comes back keyed by its setting, so each offending
+      // field is marked where it is rather than named in a banner the reader
+      // then has to go looking for.
+      const fields = err instanceof ApiError ? err.fieldErrors : {};
+      setFieldErrors(fields);
       setMessage({
         tone: 'error',
-        // the server names the offending setting, so pass it through verbatim
-        text: err instanceof ApiError ? err.message : 'Settings could not be saved.',
-      }),
+        text:
+          Object.keys(fields).length > 0
+            ? `Please correct the ${Object.keys(fields).length === 1 ? 'highlighted field' : `${Object.keys(fields).length} highlighted fields`}.`
+            : err instanceof ApiError
+              ? err.message
+              : 'Settings could not be saved.',
+      });
+    },
   });
 
   const groups = useMemo(() => {
@@ -153,6 +165,9 @@ export function AdminSettings() {
                 const multiline = setting.valueType === 'TEXT' || setting.valueType === 'HTML';
                 const isBoolean = setting.valueType === 'BOOLEAN';
                 const isSecret = setting.valueType === 'SECRET';
+                const isNumeric =
+                  setting.valueType === 'INTEGER' || setting.valueType === 'DECIMAL';
+                const fieldError = fieldErrors[setting.key];
 
                 return (
                   <Box key={setting.key}>
@@ -183,16 +198,30 @@ export function AdminSettings() {
                     {isBoolean ? (
                       <TextField
                         select fullWidth size="small"
+                        slotProps={{ htmlInput: { 'aria-label': setting.key } }}
                         value={draft[setting.key] ?? ''}
                         onChange={(e) => setDraft({ ...draft, [setting.key]: e.target.value })}
-                        helperText={setting.description}
+                        error={Boolean(fieldError)}
+                        helperText={fieldError ?? setting.description}
                       >
                         <MenuItem value="true">Yes</MenuItem>
                         <MenuItem value="false">No</MenuItem>
                       </TextField>
+                    ) : isNumeric ? (
+                      <NumberField
+                        fullWidth size="small"
+                        slotProps={{ htmlInput: { 'aria-label': setting.key } }}
+                        decimal={setting.valueType === 'DECIMAL'}
+                        value={draft[setting.key] ?? ''}
+                        onChange={(v) => setDraft({ ...draft, [setting.key]: v })}
+                        error={Boolean(fieldError)}
+                        helperText={fieldError ?? setting.description}
+                      />
                     ) : (
                       <TextField
                         fullWidth size="small"
+                        slotProps={{ htmlInput: { 'aria-label': setting.key } }}
+                        error={Boolean(fieldError)}
                         multiline={multiline}
                         minRows={multiline ? 3 : undefined}
                         // a stored secret is never sent back, so the field is
@@ -203,9 +232,10 @@ export function AdminSettings() {
                         value={draft[setting.key] ?? ''}
                         onChange={(e) => setDraft({ ...draft, [setting.key]: e.target.value })}
                         helperText={
-                          setting.valueType === 'HTML'
+                          fieldError ??
+                          (setting.valueType === 'HTML'
                             ? `${setting.description ?? ''} Basic formatting is kept; scripts are removed.`
-                            : setting.description
+                            : setting.description)
                         }
                       />
                     )}

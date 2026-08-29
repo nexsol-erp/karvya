@@ -98,6 +98,56 @@ class AdminSettingsIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo("80.00");
     }
 
+    /**
+     * Every bad value, not just the first, and each keyed to its own setting -
+     * that is what lets the form mark the offending inputs instead of showing
+     * one banner and leaving the reader to find them.
+     */
+    @Test
+    @DisplayName("every rejected value is reported against its own field")
+    void reportsEveryBadValueByField() throws Exception {
+        Cookie[] admin = adminSession();
+
+        Map<String, String> values = new java.util.LinkedHashMap<>();
+        values.put(SettingsService.DELIVERY_CHARGE, "eighty rupees");
+        values.put(SettingsService.COLOUR_PRIMARY, "reddish");
+        values.put(SettingsService.FONT_HEADING, "Comic Sans MS");
+        values.put(SettingsService.STORE_NAME, "Karvya");
+
+        mockMvc.perform(put("/api/v1/admin/settings").cookie(admin).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("values", values))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.length()").value(3))
+                .andExpect(jsonPath("$.errors['delivery.charge']").isNotEmpty())
+                .andExpect(jsonPath("$.errors['theme.colour_primary']").isNotEmpty())
+                .andExpect(jsonPath("$.errors['theme.font_heading']").isNotEmpty())
+                // the one good value is not reported as a problem
+                .andExpect(jsonPath("$.errors['store.name']").doesNotExist());
+
+        // and nothing at all was written, including the value that was fine
+        assertThat(settings.getMoney(SettingsService.DELIVERY_CHARGE, null).toPlainString())
+                .isEqualTo("0.00");
+    }
+
+    @Test
+    @DisplayName("the message under a field does not repeat the field's own name")
+    void fieldMessageReadsWellUnderTheField() throws Exception {
+        Cookie[] admin = adminSession();
+
+        mockMvc.perform(put("/api/v1/admin/settings").cookie(admin).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("values",
+                                Map.of(SettingsService.DELIVERY_CHARGE, "eighty rupees")))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors['delivery.charge']")
+                        .value(org.hamcrest.Matchers.not(
+                                org.hamcrest.Matchers.containsString("delivery.charge"))))
+                // but a lone failure shown as a banner still says which setting
+                .andExpect(jsonPath("$.detail")
+                        .value(org.hamcrest.Matchers.containsString("delivery.charge")));
+    }
+
     @Test
     @DisplayName("a value that does not match its type is refused")
     void refusesWrongTypedValue() throws Exception {
@@ -107,9 +157,13 @@ class AdminSettingsIntegrationTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("values",
                                 Map.of(SettingsService.DELIVERY_CHARGE, "eighty rupees")))))
-                .andExpect(status().isUnprocessableEntity())
+                // 400, not 422: a malformed value is a validation failure, and it
+                // is now rendered exactly as a bean-validation one so the form
+                // has a single way to mark a bad input
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type")
-                        .value("https://karvya.example/problems/invalid-setting-value"));
+                        .value("https://karvya.example/problems/validation-failed"))
+                .andExpect(jsonPath("$.errors['delivery.charge']").isNotEmpty());
 
         // and nothing was written
         assertThat(settings.getMoney(SettingsService.DELIVERY_CHARGE, null).toPlainString())

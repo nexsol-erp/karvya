@@ -22,6 +22,7 @@ import EditIcon from '@mui/icons-material/EditOutlined';
 
 import { SEOHead } from '../../components/common/SEOHead';
 import { EmptyState } from '../../components/common/EmptyState';
+import { NumberField } from '../../components/common/NumberField';
 import { ApiError } from '../../api/client';
 import {
   adminKeys,
@@ -175,10 +176,12 @@ export function AdminCategories() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 5 }}>
-              <TextField
-                label="Display order" value={form.displayOrder} onChange={set('displayOrder')}
-                helperText="Lower numbers come first"
-                fullWidth size="small" inputMode="numeric"
+              <NumberField
+                label="Display order" value={form.displayOrder}
+                onChange={(v) => setForm((p) => ({ ...p, displayOrder: v }))}
+                error={Boolean(fieldErrors.displayOrder)}
+                helperText={fieldErrors.displayOrder ?? 'Lower numbers come first'}
+                fullWidth size="small"
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
