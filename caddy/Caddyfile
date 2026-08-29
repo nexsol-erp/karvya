@@ -41,8 +41,16 @@
 	# the real request; nginx now prefers those over its own scheme.
 	reverse_proxy web:80 {
 		health_uri /healthz
-		health_interval 10s
+		health_interval 5s
 		health_timeout 3s
+
+		# Hold a request while nginx restarts instead of answering 503.
+		# A deploy replaces that container, and with a single upstream the
+		# default is to fail immediately - so every visitor mid-deploy got an
+		# error page for the few seconds it took to come back. Waiting is the
+		# honest response to "briefly unavailable"; 503 is not.
+		lb_try_duration 20s
+		lb_try_interval 500ms
 	}
 
 	log {

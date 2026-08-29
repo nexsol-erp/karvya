@@ -38,7 +38,11 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80", "--spider"]
+      # Caddy's own admin API, not port 80. Port 80 redirects to https, wget
+      # follows it, and the TLS handshake back to itself fails inside the
+      # container - which reported the container unhealthy while it was serving
+      # the site perfectly.
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1:2019/config/"]
       interval: 30s
       timeout: 5s
       retries: 3
