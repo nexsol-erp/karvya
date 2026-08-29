@@ -154,7 +154,7 @@ export function Checkout() {
           Your cart is empty
         </Typography>
         <Typography variant="body2" sx={{ mb: 3 }}>
-          Add a piece before checking out.
+          Add an item before checking out.
         </Typography>
         <Button component={RouterLink} to="/shop" variant="contained" size="large">
           Browse the shop

@@ -40,7 +40,7 @@ export function Contact() {
       </Typography>
 
       <Typography sx={{ mb: 4 }}>
-        Questions about a piece, an order, or a custom request are all welcome.
+        Questions about an item, an order, or a custom request are all welcome.
       </Typography>
 
       {!hasEmail && !hasWhatsApp && (

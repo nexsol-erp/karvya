@@ -99,7 +99,7 @@ export function ProductDetail() {
     return (
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Alert severity="error">
-          This piece could not be loaded. Please refresh to try again.
+          This item could not be loaded. Please refresh to try again.
         </Alert>
       </Container>
     );
@@ -115,7 +115,7 @@ export function ProductDetail() {
   const alreadyAtStockLimit = quantityOf(p.id) >= p.stockQuantity;
 
   const enquiry = [
-    `Hello ${settings.storeName}, I would like to ask about this piece:`,
+    `Hello ${settings.storeName}, I would like to ask about this item:`,
     '',
     p.name,
     canonicalUrl,
@@ -336,7 +336,7 @@ export function ProductDetail() {
                 fullWidth
                 startIcon={<WhatsAppIcon />}
               >
-                Ask about this piece on WhatsApp
+                Ask about this item on WhatsApp
               </Button>
             )}
           </Stack>

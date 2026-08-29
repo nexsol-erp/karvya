@@ -29,7 +29,7 @@ export function NotFound() {
         </Typography>
 
         <Typography variant="body1" color="text.secondary" sx={{ maxWidth: '44ch' }}>
-          The link may be out of date, or the piece may no longer be listed.
+          The link may be out of date, or the item may no longer be listed.
         </Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ pt: 1 }}>

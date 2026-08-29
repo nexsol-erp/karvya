@@ -267,7 +267,7 @@ export function AdminVendors() {
           <Box sx={{ p: 3 }}>
             <EmptyState
               title="No suppliers yet"
-              description="Add one, then choose it on a product to record where that piece comes from."
+              description="Add one, then choose it on a product to record where it comes from."
             />
           </Box>
         ) : (

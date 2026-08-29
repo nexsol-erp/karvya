@@ -17,7 +17,7 @@ export function FloatingWhatsApp() {
   const settings = useSiteSettings();
   if (!settings.whatsAppEnabled) return null;
 
-  const message = `Hello ${settings.storeName}, I would like to know more about your pieces.`;
+  const message = `Hello ${settings.storeName}, I would like to know more about what you sell.`;
 
   return (
     <Tooltip title="Chat on WhatsApp" placement="left">

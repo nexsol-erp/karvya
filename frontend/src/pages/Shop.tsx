@@ -118,7 +118,7 @@ export function Shop() {
       <Typography variant="body2" sx={{ mb: 4 }}>
         {products.isPending
           ? 'Loading pieces…'
-          : `${total} ${total === 1 ? 'piece' : 'pieces'}`}
+          : `${total} ${total === 1 ? 'item' : 'items'}`}
       </Typography>
 
       {/* ---------------- filters ---------------- */}
@@ -253,7 +253,7 @@ export function Shop() {
           description={
             filtersApplied
               ? 'Try widening the price range, or clear the filters to see everything.'
-              : 'There are no pieces in the catalogue yet.'
+              : 'There are no items in the catalogue yet.'
           }
           actionLabel={filtersApplied ? 'Clear filters' : undefined}
           onAction={filtersApplied ? clearAll : undefined}

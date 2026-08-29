@@ -69,7 +69,7 @@ export function Cart() {
 
         <EmptyState
           title="Your cart is empty"
-          description="Pieces you add will appear here, ready for checkout."
+          description="Items you add will appear here, ready for checkout."
         />
         <Stack sx={{ alignItems: 'center', mt: 3 }}>
           <Button component={RouterLink} to="/shop" variant="contained" size="large">

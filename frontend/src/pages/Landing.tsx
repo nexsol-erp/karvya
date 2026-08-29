@@ -88,7 +88,7 @@ export function Landing() {
                       component="a"
                       href={whatsAppLink(
                         settings.whatsAppNumber,
-                        `Hello ${settings.storeName}, I would like to know more about your pieces.`,
+                        `Hello ${settings.storeName}, I would like to know more about what you sell.`,
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -137,7 +137,7 @@ export function Landing() {
         >
           <Box>
             <Typography variant="overline" color="text.secondary">
-              Selected pieces
+              Selected items
             </Typography>
             <Typography variant="h2" sx={{ fontSize: { xs: '1.9rem', md: '2.4rem' } }}>
               Featured
@@ -195,7 +195,7 @@ export function Landing() {
                     </Typography>
                   )}
                   <Typography variant="body2" sx={{ mt: 1.5, color: 'primary.main', fontWeight: 600 }}>
-                    {category.productCount} {category.productCount === 1 ? 'piece' : 'pieces'}
+                    {category.productCount} {category.productCount === 1 ? 'item' : 'items'}
                   </Typography>
                 </Box>
               </Grid>
