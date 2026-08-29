@@ -1,0 +1,34 @@
+# build
+target/
+dist/
+node_modules/
+*.jar
+
+# env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+application-local.yml
+
+# uploads & derivatives
+/media/
+/assets/derived/
+
+# The original photographs live in assets/originals/, which is what the image
+# pipeline and the README refer to. images/ is a byte-identical copy of the
+# same ten files - committing both would double an already large repository
+# for nothing. The folder is left on disk, just not tracked.
+/images/
+
+# ide
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# test and build output
+/frontend/test-results/
+/frontend/playwright-report/
+/build-*.log

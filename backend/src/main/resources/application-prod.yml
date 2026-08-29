@@ -1,0 +1,22 @@
+server:
+  servlet:
+    session:
+      cookie:
+        # Secure by default, and it must stay that way in production: without
+        # TLS in front, this cookie is sent in the clear. It is a variable only
+        # so an HTTP-only harness - CI running the stack on localhost - can opt
+        # out deliberately. If sessions do not persist in production, TLS is
+        # missing, not this setting.
+        secure: ${APP_COOKIE_SECURE:true}
+        same-site: lax
+
+springdoc:
+  api-docs:
+    enabled: ${APP_OPENAPI_ENABLED:false}
+  swagger-ui:
+    enabled: ${APP_OPENAPI_ENABLED:false}
+
+logging:
+  level:
+    root: WARN
+    com.karvya.store: INFO

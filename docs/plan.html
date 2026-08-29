@@ -1,0 +1,1138 @@
+<title>Karvya Store Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #FBF7F0;
+    --surface:    #FFFFFF;
+    --surface-2:  #F4EDE1;
+    --ink:        #2A2723;
+    --ink-muted:  #6B6357;
+    --ink-faint:  #918776;
+    --rule:       #E4DACA;
+    --rule-soft:  #EFE7D9;
+    --terracotta: #A33B2E;
+    --coir:       #A8743F;
+    --forest:     #4C5B47;
+    --shadow:     0 1px 2px rgba(42,39,35,.05), 0 8px 24px -12px rgba(42,39,35,.18);
+
+    --display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --body:    "Karla", "Helvetica Neue", Arial, sans-serif;
+    --mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --measure: 68ch;
+    --rail: 236px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #17140F;
+      --surface:    #1F1B15;
+      --surface-2:  #262119;
+      --ink:        #EFE6D6;
+      --ink-muted:  #A79A85;
+      --ink-faint:  #7D7263;
+      --rule:       #332C22;
+      --rule-soft:  #29231B;
+      --terracotta: #DE7261;
+      --coir:       #CB9A5F;
+      --forest:     #8AA07F;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #17140F;
+    --surface:    #1F1B15;
+    --surface-2:  #262119;
+    --ink:        #EFE6D6;
+    --ink-muted:  #A79A85;
+    --ink-faint:  #7D7263;
+    --rule:       #332C22;
+    --rule-soft:  #29231B;
+    --terracotta: #DE7261;
+    --coir:       #CB9A5F;
+    --forest:     #8AA07F;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 128px;
+  }
+
+  @media (min-width: 1024px) {
+    .shell {
+      grid-template-columns: var(--rail) minmax(0, 1fr);
+      gap: 56px;
+      padding: 0 40px 128px;
+    }
+  }
+
+  .masthead {
+    grid-column: 1 / -1;
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin: 0 0 18px;
+  }
+
+  .masthead h1 {
+    font-family: var(--display);
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    line-height: 1.04;
+    letter-spacing: -.02em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    max-width: 16ch;
+  }
+
+  .masthead p {
+    margin: 0;
+    max-width: 64ch;
+    font-size: 1.075rem;
+    color: var(--ink-muted);
+  }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 30px; }
+
+  .fact {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    padding: 5px 11px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--ink-muted);
+    background: var(--surface);
+  }
+
+  .rail { display: none; }
+
+  @media (min-width: 1024px) {
+    .rail { display: block; align-self: start; position: sticky; top: 32px; }
+  }
+
+  .rail-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+
+  .rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+  .rail a {
+    display: block;
+    padding: 5px 0 5px 14px;
+    border-left: 2px solid var(--rule);
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color .15s, border-color .15s;
+  }
+
+  .rail a:hover, .rail a:focus-visible { color: var(--terracotta); border-left-color: var(--terracotta); }
+
+  main { min-width: 0; }
+  section { margin-bottom: 76px; scroll-margin-top: 28px; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+    letter-spacing: -.015em;
+    line-height: 1.15;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--body);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .01em;
+    margin: 40px 0 12px;
+  }
+
+  h4 {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+
+  .section-note { color: var(--ink-muted); max-width: var(--measure); margin: 0 0 28px; }
+  p { max-width: var(--measure); }
+  a { color: var(--terracotta); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .875em;
+    background: var(--surface-2);
+    padding: 1.5px 5px;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+
+  .lead-list { max-width: var(--measure); margin: 0 0 20px; padding-left: 20px; }
+  .lead-list li { margin-bottom: 8px; }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 12px;
+    margin: 24px 0 8px;
+  }
+
+  .swatch { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .swatch .chip { height: 58px; }
+  .swatch .meta { padding: 9px 11px 11px; }
+  .swatch .name { font-size: 13px; font-weight: 600; }
+  .swatch .hex { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); text-transform: uppercase; }
+
+  .scroller {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: var(--surface);
+    margin: 20px 0;
+    box-shadow: var(--shadow);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+    background: var(--surface-2);
+  }
+
+  tbody td { padding: 11px 16px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.mono, th.mono { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; }
+  td.wrap { white-space: normal; }
+
+  .verb {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    padding: 2.5px 7px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
+    display: inline-block;
+    min-width: 56px;
+    text-align: center;
+  }
+  .get  { color: var(--forest); }
+  .post { color: var(--terracotta); }
+  .put  { color: var(--coir); }
+  .del  { color: var(--ink-faint); }
+
+  .entities {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+    gap: 14px;
+    margin: 24px 0;
+  }
+
+  .entity {
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 16px 18px 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .entity h5 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--terracotta);
+    letter-spacing: -.01em;
+  }
+
+  .entity .role { font-size: 12.5px; color: var(--ink-faint); margin: 0 0 12px; line-height: 1.45; }
+
+  .entity ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.75;
+    color: var(--ink-muted);
+  }
+
+  .entity li b { color: var(--ink); font-weight: 500; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0; }
+
+  .flow-node {
+    flex: 1 1 132px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 12px 14px;
+  }
+
+  .flow-node .n {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .flow-node .t { font-weight: 600; font-size: 14px; margin-top: 3px; }
+  .flow-node .d { font-size: 12.5px; color: var(--ink-muted); margin-top: 4px; line-height: 1.45; }
+
+  .layers { display: flex; flex-direction: column; gap: 10px; margin: 24px 0; }
+
+  .layer {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--coir);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 14px 18px;
+  }
+  .layer:nth-child(1) { border-left-color: var(--terracotta); }
+  .layer:nth-child(2) { border-left-color: var(--coir); }
+  .layer:nth-child(3) { border-left-color: var(--forest); }
+  .layer:nth-child(4) { border-left-color: var(--ink-faint); }
+
+  .layer .pkg { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .layer .desc { font-size: 13.5px; color: var(--ink-muted); margin-top: 4px; }
+
+  .phases { display: flex; flex-direction: column; margin: 24px 0; }
+
+  .phase {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .phase:last-child { border-bottom: none; }
+
+  .phase .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--terracotta);
+    padding-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase h3 { margin: 0 0 6px; font-size: 1rem; }
+  .phase p { margin: 0; font-size: 14.5px; color: var(--ink-muted); }
+
+  .deliv { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .deliv span {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: var(--surface-2);
+    color: var(--ink-muted);
+  }
+
+  .callout {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--terracotta);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 16px 20px;
+    margin: 24px 0;
+    max-width: var(--measure);
+  }
+  .callout h4 { color: var(--terracotta); }
+  .callout p { margin: 0; font-size: 14.5px; color: var(--ink-muted); }
+  .callout p + p { margin-top: 9px; }
+
+  .done { list-style: none; margin: 20px 0; padding: 0; max-width: var(--measure); }
+  .done li {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    font-size: 14.5px;
+    color: var(--ink-muted);
+  }
+  .done li:last-child { border-bottom: none; }
+  .done .box {
+    width: 15px; height: 15px;
+    border: 1.5px solid var(--coir);
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+
+  pre.tree {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 20px 0;
+    color: var(--ink-muted);
+    box-shadow: var(--shadow);
+  }
+  pre.tree b { color: var(--ink); font-weight: 600; }
+  pre.tree i { color: var(--ink-faint); font-style: normal; }
+
+  footer.end {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--rule);
+    padding-top: 24px;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--ink-faint);
+    max-width: var(--measure);
+  }
+
+  a:focus-visible, .rail a:focus-visible {
+    outline: 2px solid var(--terracotta);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <p class="eyebrow">Phase One Blueprint</p>
+    <h1>Karvya coir handicrafts store</h1>
+    <p>A Spring Boot and React storefront for a five-piece catalogue of handwoven coir bird houses — guest and registered checkout, offline payment capture, persistent carts, and a full admin back office. This is the architecture, data model, API surface, security model, and build order, settled before the first line of application code.</p>
+    <div class="facts">
+      <span class="fact">Java 21 · Spring Boot 3.5</span>
+      <span class="fact">React 19 · TypeScript · MUI</span>
+      <span class="fact">PostgreSQL 17 · Flyway</span>
+      <span class="fact">Docker Compose · Nginx</span>
+      <span class="fact">18 tables</span>
+      <span class="fact">/api/v1</span>
+      <span class="fact">11 phases</span>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Contents</p>
+    <ol>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#data">Database model</a></li>
+      <li><a href="#lifecycle">Order lifecycle</a></li>
+      <li><a href="#security">Security model</a></li>
+      <li><a href="#api">REST API</a></li>
+      <li><a href="#pages">Pages &amp; components</a></li>
+      <li><a href="#plan">Implementation plan</a></li>
+      <li><a href="#design">Visual direction</a></li>
+      <li><a href="#catalogue">Seed catalogue</a></li>
+      <li><a href="#done">Definition of done</a></li>
+      <li><a href="#decisions">Open decisions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ ARCHITECTURE ============ -->
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <p class="section-note">One repository, three containers, one database. The backend follows clean architecture: the domain layer knows nothing about JPA, HTTP, or SMTP, and every outward dependency enters through an interface the domain itself owns.</p>
+
+      <h4>Request path</h4>
+      <div class="flow">
+        <div class="flow-node">
+          <div class="n">Client</div>
+          <div class="t">Browser</div>
+          <div class="d">React SPA, code-split by route</div>
+        </div>
+        <div class="flow-node">
+          <div class="n">Edge</div>
+          <div class="t">Nginx</div>
+          <div class="d">SPA routing, <code>/api</code> proxy, media, compression, security headers</div>
+        </div>
+        <div class="flow-node">
+          <div class="n">App</div>
+          <div class="t">Spring Boot</div>
+          <div class="d">Security chain, controllers, transactional services</div>
+        </div>
+        <div class="flow-node">
+          <div class="n">Store</div>
+          <div class="t">PostgreSQL</div>
+          <div class="d">Flyway-migrated, row locks on stock</div>
+        </div>
+      </div>
+
+      <h3>Backend layering</h3>
+      <div class="layers">
+        <div class="layer">
+          <div class="pkg">com.karvya.store.domain</div>
+          <div class="desc">Entities, value objects (Money, OrderNumber, Slug, Email), domain exceptions, state-transition rules, and repository interfaces. No Spring annotations — unit-testable with plain JUnit.</div>
+        </div>
+        <div class="layer">
+          <div class="pkg">com.karvya.store.application</div>
+          <div class="desc">Use-case services owning the transaction boundary — <code>PlaceOrderService</code>, <code>CartMergeService</code>, <code>CatalogQueryService</code>, <code>OrderAdminService</code>, <code>PasswordResetService</code>. Command and result records, plus mappers.</div>
+        </div>
+        <div class="layer">
+          <div class="pkg">com.karvya.store.infrastructure</div>
+          <div class="desc">Adapters implementing the domain's ports — Spring Data JPA repositories, <code>LocalFileSystemStorage</code>, <code>SmtpMailSender</code>, Flyway config, Spring Security wiring, rate limiters, the outbox worker.</div>
+        </div>
+        <div class="layer">
+          <div class="pkg">com.karvya.store.web</div>
+          <div class="desc">Versioned REST controllers under <code>/api/v1</code>, request/response DTOs with Bean Validation, and a <code>@RestControllerAdvice</code> mapping domain exceptions to RFC 7807 problem responses. No entity ever crosses the wire.</div>
+        </div>
+      </div>
+
+      <h3>Decisions worth stating up front</h3>
+      <ul class="lead-list">
+        <li><b>Sessions, not JWTs, for both audiences.</b> Customers and administrators authenticate into server sessions held in an HttpOnly, Secure, SameSite=Lax cookie, persisted through Spring Session JDBC. Sessions survive a restart, and disabling an account or changing a password invalidates them immediately — a property bearer tokens cannot offer without a revocation list.</li>
+        <li><b>Two cart implementations behind one interface.</b> Visitors keep a cart in localStorage; logged-in customers get a database cart. On login, <code>CartMergeService</code> combines them — duplicate products sum, and every line is capped at available stock rather than silently overselling.</li>
+        <li><b>The browser's totals are never authoritative.</b> Cart contents are posted as product ids and quantities only. The server re-reads price, active status, and stock, recomputes the subtotal, delivery charge, and total, and rejects the checkout if anything moved.</li>
+        <li><b>Stock is protected by pessimistic row locks.</b> The order transaction selects each product <code>FOR UPDATE</code> in ascending id order — the consistent ordering is what prevents deadlock between concurrent checkouts — while a <code>version</code> column guards admin edits against lost updates. This choice is documented in the README as the brief requires.</li>
+        <li><b>Cancellation restocks exactly once.</b> A <code>stock_restored_at</code> timestamp on the order makes the restore idempotent: the transition re-reads the row under lock, and a second cancellation is a no-op rather than a double credit.</li>
+        <li><b>Order items are immutable snapshots.</b> Name, SKU, unit price, quantity, and line total are copied onto the line at purchase. The product foreign key is nullable and set null on archive, so history survives catalogue changes.</li>
+        <li><b>Email cannot fail an order.</b> The order commits first; notifications are rows in <code>email_notification</code> that a scheduled worker claims, sends, and retries with bounded exponential backoff — no busy polling, no long-held locks.</li>
+        <li><b>Images are files, not blobs.</b> A <code>StorageService</code> port with a filesystem adapter today and S3 later. The database stores metadata and a stable relative key.</li>
+        <li><b>Payments have a seam but no implementation.</b> A <code>PaymentInitiator</code> interface exists with only the offline implementation registered; phase two adds a gateway adapter without touching the order flow.</li>
+      </ul>
+
+      <h3>Repository layout</h3>
+      <pre class="tree"><b>karvya/</b>
+├── <b>backend/</b>
+│   ├── src/main/java/com/karvya/store/   <i>domain · application · infrastructure · web</i>
+│   ├── src/main/resources/
+│   │   ├── db/migration/                 <i>V1__schema · V2__reference_data · V3__seed_catalogue</i>
+│   │   ├── templates/email/              <i>order-admin · order-customer · password-reset · enquiry</i>
+│   │   └── application{,-dev,-prod}.yml
+│   ├── src/test/java/                    <i>unit · integration (Testcontainers: PostgreSQL)</i>
+│   └── Dockerfile
+├── <b>frontend/</b>
+│   ├── src/{pages,components,features,theme,api,hooks}/
+│   ├── e2e/                              <i>Playwright — guest flow · registered flow</i>
+│   └── Dockerfile
+├── <b>nginx/</b>default.conf
+├── <b>assets/originals/</b>                    <i>the ten source photographs, untouched</i>
+├── <b>scripts/</b>optimise-images.mjs         <i>sharp → WebP + AVIF derivatives</i>
+├── docker-compose.yml · .env.example
+└── .github/workflows/ci.yml
+</pre>
+    </section>
+
+    <!-- ============ DATA ============ -->
+    <section id="data">
+      <h2>Database model</h2>
+      <p class="section-note">Eighteen tables created by <code>V1__schema.sql</code>. Money is <code>NUMERIC(10,2)</code> — never floating point. Timestamps are <code>TIMESTAMPTZ</code>. Every business table carries <code>created_at</code> and <code>updated_at</code>; every table a human acts on also carries <code>updated_by</code>. The orders table is <code>customer_order</code>, since <code>order</code> is reserved in SQL.</p>
+
+      <div class="entities">
+
+        <div class="entity">
+          <h5>app_user</h5>
+          <p class="role">One table for both audiences; roles decide what an account may do.</p>
+          <ul>
+            <li><b>email_normalized</b> unique</li>
+            <li><b>phone</b> unique where set</li>
+            <li><b>password_hash</b> bcrypt</li>
+            <li><b>full_name</b>, <b>enabled</b></li>
+            <li><b>must_change_password</b></li>
+            <li><b>failed_attempts</b>, <b>locked_until</b></li>
+            <li><b>email_verified_at</b>, <b>last_login_at</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>role · user_role</h5>
+          <p class="role">Named roles and their mapping. ADMIN, STAFF, CUSTOMER.</p>
+          <ul>
+            <li><b>code</b> unique, <b>label</b></li>
+            <li><b>user_id</b> + <b>role_id</b> PK</li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>customer_address</h5>
+          <p class="role">Saved delivery addresses. Scoped to the owner on every read.</p>
+          <ul>
+            <li><b>user_id</b> FK cascade</li>
+            <li><b>label</b>, <b>recipient_name</b>, <b>phone</b></li>
+            <li><b>line1</b>, <b>line2</b>, <b>city</b></li>
+            <li><b>state</b>, <b>postal_code</b></li>
+            <li><b>is_default</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>password_reset_token</h5>
+          <p class="role">Single-use and expiring. Only a hash is stored, never the token itself.</p>
+          <ul>
+            <li><b>user_id</b> FK cascade</li>
+            <li><b>token_hash</b> unique</li>
+            <li><b>expires_at</b>, <b>used_at</b></li>
+            <li><b>requested_ip</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>cart · cart_item</h5>
+          <p class="role">Server-side cart for logged-in customers. One open cart per user.</p>
+          <ul>
+            <li><b>user_id</b> unique FK</li>
+            <li><b>cart_id</b> + <b>product_id</b> unique</li>
+            <li><b>quantity</b>, <b>added_at</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>category</h5>
+          <p class="role">Catalogue grouping, ordered and deactivatable.</p>
+          <ul>
+            <li><b>name</b>, <b>slug</b> unique</li>
+            <li><b>description</b>, <b>image_path</b></li>
+            <li><b>display_order</b>, <b>active</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>product</h5>
+          <p class="role">The sellable item. Optimistic-locked; archived, never deleted.</p>
+          <ul>
+            <li><b>sku</b> unique, <b>slug</b> unique</li>
+            <li><b>category_id</b> FK</li>
+            <li><b>price</b> NUMERIC(10,2)</li>
+            <li><b>material</b>, <b>colour</b>, <b>dimensions</b></li>
+            <li><b>care_instructions</b></li>
+            <li><b>stock_quantity</b>, <b>low_stock_threshold</b></li>
+            <li><b>featured</b>, <b>status</b> enum</li>
+            <li><b>version</b> optimistic lock</li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>product_image</h5>
+          <p class="role">Ordered gallery. Derivative paths are computed from the base key.</p>
+          <ul>
+            <li><b>product_id</b> FK cascade</li>
+            <li><b>storage_key</b>, <b>alt_text</b></li>
+            <li><b>display_order</b>, <b>is_primary</b></li>
+            <li><b>width</b>, <b>height</b>, <b>bytes</b></li>
+            <li><b>content_type</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>customer_order</h5>
+          <p class="role">Order header with the delivery contact denormalised on as an immutable snapshot.</p>
+          <ul>
+            <li><b>order_number</b> unique</li>
+            <li><b>user_id</b> FK nullable (guest)</li>
+            <li><b>status</b>, <b>payment_status</b></li>
+            <li><b>subtotal</b>, <b>delivery_charge</b>, <b>total</b></li>
+            <li><b>currency</b>, <b>payment_method_code</b></li>
+            <li><b>delivery_*</b>, <b>address_*</b>, <b>city</b>, <b>state</b>, <b>postal_code</b></li>
+            <li><b>delivery_notes</b>, <b>customer_comments</b></li>
+            <li><b>internal_notes</b>, <b>access_token_hash</b></li>
+            <li><b>stock_restored_at</b>, <b>version</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>order_item</h5>
+          <p class="role">Immutable purchase snapshot. Survives product edits and archival.</p>
+          <ul>
+            <li><b>order_id</b> FK cascade</li>
+            <li><b>product_id</b> FK null on delete</li>
+            <li><b>product_name</b>, <b>product_sku</b></li>
+            <li><b>unit_price</b>, <b>quantity</b>, <b>line_total</b></li>
+            <li><b>image_key</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>order_status_history</h5>
+          <p class="role">Append-only audit of every status and payment-status move.</p>
+          <ul>
+            <li><b>order_id</b> FK</li>
+            <li><b>field</b>, <b>from_value</b>, <b>to_value</b></li>
+            <li><b>note</b>, <b>changed_by</b>, <b>changed_at</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>payment_method</h5>
+          <p class="role">Admin-editable offline methods shown at checkout.</p>
+          <ul>
+            <li><b>code</b> unique, <b>label</b></li>
+            <li><b>instructions</b> text</li>
+            <li><b>display_order</b>, <b>active</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>offline_payment</h5>
+          <p class="role">Recorded when money actually arrives.</p>
+          <ul>
+            <li><b>order_id</b> FK</li>
+            <li><b>method_code</b>, <b>reference</b></li>
+            <li><b>amount</b>, <b>received_on</b></li>
+            <li><b>recorded_by</b>, <b>note</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>contact_enquiry</h5>
+          <p class="role">Contact-form submissions with a triage status.</p>
+          <ul>
+            <li><b>name</b>, <b>email</b>, <b>phone</b></li>
+            <li><b>subject</b>, <b>message</b></li>
+            <li><b>status</b> NEW · IN_PROGRESS · RESOLVED</li>
+            <li><b>internal_note</b>, <b>handled_by</b></li>
+            <li><b>source_ip</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>site_setting</h5>
+          <p class="role">Typed key/value store, cached in memory and evicted on write.</p>
+          <ul>
+            <li><b>setting_key</b> PK</li>
+            <li><b>setting_value</b>, <b>value_type</b></li>
+            <li><b>description</b>, <b>updated_by</b></li>
+          </ul>
+        </div>
+
+        <div class="entity">
+          <h5>email_notification</h5>
+          <p class="role">Transactional outbox. Written inside the order transaction, sent outside it.</p>
+          <ul>
+            <li><b>type</b>, <b>recipient</b>, <b>subject</b></li>
+            <li><b>payload</b> JSONB</li>
+            <li><b>related_order_id</b> FK</li>
+            <li><b>status</b>, <b>attempts</b>, <b>last_error</b></li>
+            <li><b>next_attempt_at</b> indexed</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <h4>Indexes that earn their place</h4>
+      <p>Unique on <code>app_user(email_normalized)</code>, <code>product(sku)</code>, <code>product(slug)</code>, <code>customer_order(order_number)</code>, <code>cart_item(cart_id, product_id)</code>. Composite on <code>product(status, category_id)</code> and <code>product(status, featured)</code> for the catalogue, <code>customer_order(status, placed_at DESC)</code> for the admin list, <code>customer_order(user_id, placed_at DESC)</code> for order history, and a partial index on <code>email_notification(next_attempt_at) WHERE status = 'PENDING'</code> so the outbox worker touches only what it needs.</p>
+    </section>
+
+    <!-- ============ LIFECYCLE ============ -->
+    <section id="lifecycle">
+      <h2>Order lifecycle</h2>
+      <p class="section-note">The brief asks for order status and payment status to be modelled separately, so they are two independent enums with their own transition rules — enforced in the service layer, not the controller, and every move recorded in history.</p>
+
+      <h3>Order status</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Status</th><th>May move to</th><th>Meaning</th><th>Stock effect</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">NEW</td><td class="mono">CONFIRMED · CANCELLED</td><td class="wrap">Placed, not yet reviewed</td><td class="wrap">Reserved at creation</td></tr>
+            <tr><td class="mono">CONFIRMED</td><td class="mono">PROCESSING · CANCELLED</td><td class="wrap">Team has verified the order</td><td>—</td></tr>
+            <tr><td class="mono">PROCESSING</td><td class="mono">SHIPPED · CANCELLED</td><td class="wrap">Being packed</td><td>—</td></tr>
+            <tr><td class="mono">SHIPPED</td><td class="mono">DELIVERED</td><td class="wrap">Handed to the courier</td><td>—</td></tr>
+            <tr><td class="mono">DELIVERED</td><td class="mono">—</td><td class="wrap">Complete</td><td>—</td></tr>
+            <tr><td class="mono">CANCELLED</td><td class="mono">—</td><td class="wrap">Terminal</td><td class="wrap">Restored once, guarded by <code>stock_restored_at</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Payment status</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Status</th><th>May move to</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">PENDING</td><td class="mono">AWAITING_PAYMENT · PAID_OFFLINE</td><td class="wrap">Order placed, nothing arranged yet</td></tr>
+            <tr><td class="mono">AWAITING_PAYMENT</td><td class="mono">PAID_OFFLINE · CANCELLED</td><td class="wrap">Instructions sent to the customer</td></tr>
+            <tr><td class="mono">PAID_OFFLINE</td><td class="mono">REFUNDED</td><td class="wrap">Money received and recorded against the order</td></tr>
+            <tr><td class="mono">REFUNDED</td><td class="mono">—</td><td class="wrap">Terminal</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <h4>Order numbers</h4>
+        <p>Format <code>KV-260828-7QK4</code> — prefix, date, and four random base-32 characters from a secure random source. The date keeps it human and sortable; the random suffix keeps it non-guessable, so knowing one order number tells you nothing about another. Short enough to read aloud, which matters when payment gets settled over WhatsApp.</p>
+        <p>The guest confirmation page is guarded separately by an opaque token hashed into <code>access_token_hash</code>, so the order number alone is not enough to view an order.</p>
+      </div>
+    </section>
+
+    <!-- ============ SECURITY ============ -->
+    <section id="security">
+      <h2>Security model</h2>
+      <p class="section-note">Three audiences share one filter chain with different authorities. Every rule below is enforced server-side; the frontend mirrors some of them for usability but is never the control.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Concern</th><th>Approach</th></tr></thead>
+          <tbody>
+            <tr><td>Password storage</td><td class="wrap">bcrypt through <code>DelegatingPasswordEncoder</code>, so the algorithm can be upgraded without a migration</td></tr>
+            <tr><td>Session</td><td class="wrap">HttpOnly, Secure, SameSite=Lax cookie; Spring Session JDBC; rotated on login, invalidated on logout and on password change</td></tr>
+            <tr><td>CSRF</td><td class="wrap">Enabled for all cookie-authenticated state-changing requests, cookie-to-header token pattern</td></tr>
+            <tr><td>Account enumeration</td><td class="wrap">Login and password reset return identical responses and timing whether or not the account exists</td></tr>
+            <tr><td>Throttling</td><td class="wrap">Per-username and per-IP limits on login, registration, password reset, and enquiry submission; temporary lockout after repeated failures</td></tr>
+            <tr><td>IDOR</td><td class="wrap">Every customer-scoped query filters by the authenticated user id in the repository method itself, not in a controller check</td></tr>
+            <tr><td>Mass assignment</td><td class="wrap">Explicit request DTOs; entities are never bound from request bodies</td></tr>
+            <tr><td>File upload</td><td class="wrap">Allow-list of MIME type and extension, magic-byte signature check, maximum bytes, maximum pixel dimensions, server-generated UUID filenames, stored outside the web root and served as static content only</td></tr>
+            <tr><td>Spam</td><td class="wrap">Honeypot field plus rate limiting on the contact form; CAPTCHA left as an optional extension</td></tr>
+            <tr><td>Settings content</td><td class="wrap">Typed validation per setting and HTML sanitisation on any rich text, so configurable copy cannot inject script</td></tr>
+            <tr><td>Error responses</td><td class="wrap">RFC 7807 problem documents; stack traces and SQL never reach the client</td></tr>
+            <tr><td>Actuator</td><td class="wrap">Only <code>health</code>, with liveness and readiness groups; everything else disabled in production</td></tr>
+            <tr><td>Secrets</td><td class="wrap">Environment variables only; <code>.env</code> and <code>*.pem</code> are gitignored, and logs redact tokens and personal data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ API ============ -->
+    <section id="api">
+      <h2>REST API</h2>
+      <p class="section-note">Versioned under <code>/api/v1</code>, documented with OpenAPI whose production exposure is a configuration flag. Public endpoints are open and read-mostly; <code>/account</code> requires a customer session; <code>/admin</code> requires <code>ROLE_ADMIN</code>. Writes carry a CSRF token.</p>
+
+      <h3>Public storefront</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/products</td><td class="wrap">Paged catalogue — <code>q</code>, <code>category</code>, <code>minPrice</code>, <code>maxPrice</code>, <code>inStock</code>, <code>featured</code>, <code>sort</code></td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/products/{slug}</td><td class="wrap">Detail with gallery, attributes, and stock</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/products/{slug}/related</td><td class="wrap">Four more from the same category</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/categories</td><td class="wrap">Active categories with product counts</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/cart/validate</td><td class="wrap">Re-price a visitor cart and report stock problems</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/payment-methods</td><td class="wrap">Active offline methods with instructions</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/orders</td><td class="wrap">Place an order — guest or authenticated</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/orders/{orderNumber}</td><td class="wrap">Confirmation view, guarded by an opaque token</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/enquiries</td><td class="wrap">Contact form — honeypot and rate limited</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/settings/public</td><td class="wrap">Store name, WhatsApp number, delivery rules, social and policy links</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Customer account</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/auth/register</td><td class="wrap">Create a customer account</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/auth/login</td><td class="wrap">Start a session; merges any guest cart posted with it</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/auth/logout</td><td class="wrap">Invalidate the session</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/auth/me</td><td class="wrap">Current user and roles</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/auth/password/change</td><td class="wrap">Requires the current password; invalidates other sessions</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/auth/password/forgot</td><td class="wrap">Always returns 202, whether or not the account exists</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/auth/password/reset</td><td class="wrap">Single-use expiring token</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/account/profile</td><td class="wrap">View and PUT to update</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/account/addresses</td><td class="wrap">CRUD, plus set-default; scoped to the owner</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/account/cart</td><td class="wrap">Server cart — PUT items, DELETE one, DELETE all</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/account/orders</td><td class="wrap">Own order history, paged</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/account/orders/{orderNumber}</td><td class="wrap">Own order detail — 404 for anyone else's</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Admin</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/admin/auth/login</td><td class="wrap">Separate throttle policy; logout and <code>me</code> alongside</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/dashboard</td><td class="wrap">Status counts, order value for a labelled range, low stock, enquiries, failed notifications</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/products</td><td class="wrap">All statuses; POST, PUT, PATCH status, plus a preview endpoint</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/admin/products/{id}/images</td><td class="wrap">Validated multipart upload; PUT order, DELETE one</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/categories</td><td class="wrap">CRUD and activation</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/orders</td><td class="wrap">Filter by date, customer, number, order status, payment status</td></tr>
+            <tr><td><span class="verb put">PATCH</span></td><td class="mono">/admin/orders/{id}/status</td><td class="wrap">Validated transition; restocks once on cancel</td></tr>
+            <tr><td><span class="verb put">PATCH</span></td><td class="mono">/admin/orders/{id}/payment-status</td><td class="wrap">Independent of order status</td></tr>
+            <tr><td><span class="verb post">POST</span></td><td class="mono">/admin/orders/{id}/payments</td><td class="wrap">Record an offline payment; notes endpoint alongside</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/orders/export.csv</td><td class="wrap">Streamed, injection-safe CSV of the current filter</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/customers</td><td class="wrap">Search, view orders, enable or disable, trigger a reset email</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/enquiries</td><td class="wrap">List, PATCH status, add internal note</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/settings</td><td class="wrap">All settings with types; PUT to save</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/payment-methods</td><td class="wrap">CRUD for offline methods</td></tr>
+            <tr><td><span class="verb get">GET</span></td><td class="mono">/admin/notifications</td><td class="wrap">Outbox status, with a manual retry action</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Outside the versioned prefix: <code>/actuator/health</code> with liveness and readiness groups, and <code>/sitemap.xml</code> and <code>/robots.txt</code> generated from live product slugs.</p>
+    </section>
+
+    <!-- ============ PAGES ============ -->
+    <section id="pages">
+      <h2>Pages &amp; components</h2>
+      <p class="section-note">Three route trees behind one build — storefront, customer account, and admin — sharing a theme but not a layout. Server state through TanStack Query, forms through react-hook-form with zod, routes code-split so the admin bundle never ships to shoppers.</p>
+
+      <h3>Public routes</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Route</th><th>Page</th><th>Notable pieces</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">/</td><td>Landing</td><td class="wrap">Hero, featured grid, categories, why handmade, story, materials, contact</td></tr>
+            <tr><td class="mono">/shop</td><td>Catalogue</td><td class="wrap">FilterPanel, SearchBar, sort control, ProductGrid, load-more, skeletons</td></tr>
+            <tr><td class="mono">/shop/:categorySlug</td><td>Category</td><td class="wrap">Same grid pre-filtered, own metadata and canonical</td></tr>
+            <tr><td class="mono">/product/:slug</td><td>Detail</td><td class="wrap">Gallery, attributes, QuantityStepper, WhatsApp enquiry, related, JSON-LD</td></tr>
+            <tr><td class="mono">/cart</td><td>Cart</td><td class="wrap">CartTable, OrderSummary, empty state — noindex</td></tr>
+            <tr><td class="mono">/checkout</td><td>Checkout</td><td class="wrap">Saved-address picker or new address, PaymentMethodPicker — noindex</td></tr>
+            <tr><td class="mono">/order/:orderNumber</td><td>Confirmation</td><td class="wrap">Summary, payment instructions, WhatsApp share — noindex</td></tr>
+            <tr><td class="mono">/our-story · /contact</td><td>Story, Contact</td><td class="wrap">Configurable copy; enquiry form with honeypot</td></tr>
+            <tr><td class="mono">/policies/:slug</td><td>Policy</td><td class="wrap">Settings-driven content</td></tr>
+            <tr><td class="mono">*</td><td>404</td><td class="wrap">Custom, with a route back to the shop</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Account routes</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Route</th><th>Page</th><th>Notable pieces</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">/register · /login</td><td>Auth</td><td class="wrap">Guest-cart merge on login; no enumeration in errors — noindex</td></tr>
+            <tr><td class="mono">/forgot-password · /reset-password</td><td>Reset</td><td class="wrap">Token from email, always-positive confirmation — noindex</td></tr>
+            <tr><td class="mono">/account</td><td>Overview</td><td class="wrap">Profile summary and recent orders</td></tr>
+            <tr><td class="mono">/account/profile</td><td>Profile</td><td class="wrap">Edit details, change password</td></tr>
+            <tr><td class="mono">/account/addresses</td><td>Addresses</td><td class="wrap">List, add, edit, delete, set default</td></tr>
+            <tr><td class="mono">/account/orders · /:orderNumber</td><td>History</td><td class="wrap">Own orders only, with status timeline</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Admin routes</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Route</th><th>Page</th><th>Notable pieces</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">/admin/login</td><td>Login</td><td class="wrap">Throttle feedback, no user enumeration</td></tr>
+            <tr><td class="mono">/admin</td><td>Dashboard</td><td class="wrap">StatCards, recent orders, low stock, enquiries, failed notifications</td></tr>
+            <tr><td class="mono">/admin/products · /:id</td><td>Catalogue</td><td class="wrap">DataTable; editor with drag-reorder ImageUploader and preview</td></tr>
+            <tr><td class="mono">/admin/categories</td><td>Categories</td><td class="wrap">Order and activation</td></tr>
+            <tr><td class="mono">/admin/orders · /:id</td><td>Orders</td><td class="wrap">FilterBar, CSV export; detail with history timeline, payment capture, notes, print view</td></tr>
+            <tr><td class="mono">/admin/customers · /:id</td><td>Customers</td><td class="wrap">Search, their orders, enable or disable, send reset</td></tr>
+            <tr><td class="mono">/admin/enquiries</td><td>Enquiries</td><td class="wrap">Triage with encoded mailto and wa.me actions</td></tr>
+            <tr><td class="mono">/admin/settings</td><td>Settings</td><td class="wrap">Grouped forms — store, contact, delivery, payments, content, policies</td></tr>
+            <tr><td class="mono">/admin/change-password</td><td>Forced change</td><td class="wrap">Blocks every other admin route while the flag is set</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ PLAN ============ -->
+    <section id="plan">
+      <h2>Implementation plan</h2>
+      <p class="section-note">Eleven phases, each ending at something runnable and verifiable. The order is deliberate: the transactional core is proven before any admin screen exists, because that is where correctness actually matters.</p>
+
+      <div class="phases">
+
+        <div class="phase"><div class="num">01</div><div>
+          <h3>Foundation</h3>
+          <p>Repository skeleton, Docker Compose with PostgreSQL on a named volume, a Spring Boot application that starts and answers a readiness check, Flyway wired and verified against a real database.</p>
+          <div class="deliv"><span>docker-compose.yml</span><span>.env.example</span><span>V1__schema.sql</span><span>/actuator/health</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">02</div><div>
+          <h3>Domain and catalogue</h3>
+          <p>Entities and repositories, catalogue queries with filters and all four sorts, public product and category endpoints. The image pipeline converts the ten originals to WebP and AVIF at four widths; the seed migration loads five products.</p>
+          <div class="deliv"><span>JPA entities</span><span>CatalogQueryService</span><span>optimise-images.mjs</span><span>V3__seed_catalogue.sql</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">03</div><div>
+          <h3>Storefront shell</h3>
+          <p>Vite, TypeScript, and an MUI theme built from the palette below. Landing, shop, and product detail against the live API. WhatsApp links with encoded prefilled messages. Metadata, canonicals, Open Graph, and JSON-LD.</p>
+          <div class="deliv"><span>MUI theme</span><span>Landing</span><span>Shop</span><span>ProductDetail</span><span>SEOHead</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">04</div><div>
+          <h3>Customer identity</h3>
+          <p>Registration, login, logout, change password, and the forgot/reset flow with hashed single-use tokens. Profile and saved addresses. Throttling and enumeration-resistant responses from the start, not bolted on later.</p>
+          <div class="deliv"><span>SecurityConfig</span><span>PasswordResetService</span><span>addresses</span><span>rate limiting</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">05</div><div>
+          <h3>Carts</h3>
+          <p>Visitor cart in localStorage, database cart for logged-in customers, and the merge on login — duplicates summed, every line capped at available stock. Server-side re-validation endpoint that reports exactly what changed.</p>
+          <div class="deliv"><span>CartContext</span><span>CartMergeService</span><span>stock capping</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">06</div><div>
+          <h3>Checkout and orders</h3>
+          <p>The heart of it. One transaction that locks stock rows in id order, decrements, snapshots line items, generates the order number, writes the initial status history, and commits. Guest and authenticated paths, confirmation page, order history.</p>
+          <div class="deliv"><span>PlaceOrderService</span><span>row locking</span><span>status transitions</span><span>OrderConfirmation</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">07</div><div>
+          <h3>Notifications</h3>
+          <p>Email templates for the admin alert, customer confirmation, and password reset. The outbox worker claims pending rows, sends, and retries with bounded backoff. Proven by killing SMTP mid-order and watching the order survive intact.</p>
+          <div class="deliv"><span>email templates</span><span>outbox worker</span><span>bounded retry</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">08</div><div>
+          <h3>Admin backend</h3>
+          <p>Admin authorities on the shared chain, the seeded first administrator from environment variables with the forced-change flag set, dashboard aggregates, and the product, order, customer, enquiry, and settings APIs. Upload validation down to magic bytes.</p>
+          <div class="deliv"><span>admin APIs</span><span>upload validation</span><span>dashboard</span><span>CSV export</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">09</div><div>
+          <h3>Admin interface</h3>
+          <p>Login and forced password change, dashboard, product editor with drag-to-reorder uploads and preview, order management with transitions and offline payment capture, customer management, enquiry triage, and the settings screens.</p>
+          <div class="deliv"><span>AdminLayout</span><span>ImageUploader</span><span>order detail</span><span>settings</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">10</div><div>
+          <h3>Hardening</h3>
+          <p>Domain unit tests, Testcontainers integration tests including the concurrent-checkout oversell test and the idempotent-restock test, component tests, and two Playwright runs — guest and registered. Then accessibility, contrast, keyboard paths, and Core Web Vitals.</p>
+          <div class="deliv"><span>oversell test</span><span>cart merge test</span><span>2× E2E</span><span>a11y pass</span><span>sitemap · robots</span></div>
+        </div></div>
+
+        <div class="phase"><div class="num">11</div><div>
+          <h3>Deployment and verification</h3>
+          <p>Multi-stage Dockerfiles, Nginx with SPA routing and security headers, GitHub Actions for both builds and container validation, production profile, backup and restore runbook, and the verification report listing every command run and its result.</p>
+          <div class="deliv"><span>Dockerfiles</span><span>nginx.conf</span><span>ci.yml</span><span>pg_dump runbook</span><span>verification report</span></div>
+        </div></div>
+
+      </div>
+    </section>
+
+    <!-- ============ DESIGN ============ -->
+    <section id="design">
+      <h2>Visual direction</h2>
+      <p class="section-note">Every colour below is sampled from the product photographs themselves — the coir body, the dyed roof, the plaster backdrops the pieces were shot against. That is what keeps the storefront looking like it belongs to the objects rather than to a template.</p>
+
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#F0E7D8"></div><div class="meta"><div class="name">Plaster</div><div class="hex">#F0E7D8</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#D9B486"></div><div class="meta"><div class="name">Coir light</div><div class="hex">#D9B486</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#A8743F"></div><div class="meta"><div class="name">Coir</div><div class="hex">#A8743F</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#8A5A32"></div><div class="meta"><div class="name">Coconut</div><div class="hex">#8A5A32</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#A33B2E"></div><div class="meta"><div class="name">Terracotta</div><div class="hex">#A33B2E</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#4C5B47"></div><div class="meta"><div class="name">Forest</div><div class="hex">#4C5B47</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#33322E"></div><div class="meta"><div class="name">Charcoal</div><div class="hex">#33322E</div></div></div>
+      </div>
+
+      <p>Terracotta is the single accent — buttons, links, active states — and nothing competes with it. Forest green is reserved for in-stock and success states so semantic colour stays separate from brand colour. Charcoal carries body text above 4.5:1 on plaster. Mobile first throughout: the shop grid starts at one column, the product gallery is swipeable, and the floating WhatsApp button sits clear of the thumb zone and of any focus trap.</p>
+
+      <div class="callout">
+        <h4>A note on the photographs</h4>
+        <p>All ten images carry a small four-point sparkle mark in the lower-right corner, most visible against the darker backdrops. Before these go live as product photography that corner should be cropped or retouched — the pipeline can crop a fixed margin, but it is worth your eye on it first.</p>
+        <p>Originals stay untouched in <code>assets/originals/</code>. Derivatives are generated at 480, 800, 1280, and 1920 wide in WebP and AVIF with a JPEG fallback, served through <code>srcset</code> with lazy loading below the fold.</p>
+      </div>
+    </section>
+
+    <!-- ============ CATALOGUE ============ -->
+    <section id="catalogue">
+      <h2>Seed catalogue</h2>
+      <p class="section-note">The brief names three images; the workspace holds ten — five products photographed twice each. All five are seeded, with <code>1a</code>, <code>2a</code>, and <code>5a</code> as the featured three exactly as asked. Names and descriptions are placeholders written only from what the photographs show; no material, origin, or use is claimed that is not visible.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>SKU</th><th>Product</th><th>Images</th><th>Distinguishing feature</th><th>Featured</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">KV-BH-01</td><td class="wrap">Terracotta Roof Coir Nest House</td><td class="mono">1a · 1b</td><td class="wrap">Deep red dyed conical roof, cylindrical body, jute loop</td><td class="mono">yes</td></tr>
+            <tr><td class="mono">KV-BH-02</td><td class="wrap">Natural Coir Dome Nest House</td><td class="mono">2a · 2b</td><td class="wrap">Undyed throughout, domed cap, twisted rope hanger</td><td class="mono">yes</td></tr>
+            <tr><td class="mono">KV-BH-03</td><td class="wrap">Teardrop Coir Nest House</td><td class="mono">3a · 3b</td><td class="wrap">Gourd silhouette, red roof, wide entrance</td><td class="mono">—</td></tr>
+            <tr><td class="mono">KV-BH-04</td><td class="wrap">Pitched Roof Coir Bird House</td><td class="mono">4a · 4b</td><td class="wrap">Square body, dark felted pitched roof</td><td class="mono">—</td></tr>
+            <tr><td class="mono">KV-BH-05</td><td class="wrap">Twin Entrance Coir Bird House</td><td class="mono">5a · 5b</td><td class="wrap">Wide form, two copper-rimmed openings</td><td class="mono">yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>One category at launch — <b>Bird Houses &amp; Nests</b> — with the schema ready for more. Every seeded price, description, and dimension is marked as placeholder in the migration and in the README, so nothing fabricated reaches a customer unreviewed.</p>
+    </section>
+
+    <!-- ============ DONE ============ -->
+    <section id="done">
+      <h2>Definition of done</h2>
+      <p class="section-note">Phase one is finished when every one of these works end to end against the Docker Compose stack — not in isolation, and not with a mocked step in the middle.</p>
+
+      <ul class="done">
+        <li><span class="box"></span><span>A visitor browses the seeded catalogue, adds to a cart, contacts the business, and places a guest order with an offline payment method.</span></li>
+        <li><span class="box"></span><span>A visitor registers, logs in, changes and resets a password, manages profile and addresses, keeps a server cart, orders, and sees only their own history.</span></li>
+        <li><span class="box"></span><span>The server independently validates prices and stock, and concurrent checkouts cannot oversell.</span></li>
+        <li><span class="box"></span><span>An administrator logs in, is forced to change the seeded password, manages products and photographs, updates prices and stock, and works orders and enquiries.</span></li>
+        <li><span class="box"></span><span>Offline payments are recorded against orders, and cancelling restocks exactly once.</span></li>
+        <li><span class="box"></span><span>Orders survive SMTP being unavailable, and the outbox reports what failed.</span></li>
+        <li><span class="box"></span><span>WhatsApp links open with the configured number and a correctly encoded contextual message.</span></li>
+        <li><span class="box"></span><span>The stack runs through Docker Compose with database and uploads persisting across a restart.</span></li>
+        <li><span class="box"></span><span>Builds, migrations, and the automated test suites pass, with results reported verbatim.</span></li>
+        <li><span class="box"></span><span>No secrets are committed, and no fabricated business claim appears anywhere in the UI.</span></li>
+      </ul>
+    </section>
+
+    <!-- ============ DECISIONS ============ -->
+    <section id="decisions">
+      <h2>Open decisions</h2>
+      <p class="section-note">None of these block the build. Each has a working default that ships if nothing is said, and each is a settings row or an environment variable rather than a code change.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Question</th><th>Default in place</th></tr></thead>
+          <tbody>
+            <tr><td>Store name and logo</td><td class="wrap"><b>Karvya</b>, wordmark set in the display face until artwork exists</td></tr>
+            <tr><td>WhatsApp number</td><td class="wrap">Environment variable; every <code>wa.me</code> link reads from it</td></tr>
+            <tr><td>Administrator email</td><td class="wrap">Environment variable; order alerts queue harmlessly until it is real</td></tr>
+            <tr><td>Product prices and dimensions</td><td class="wrap">Marked placeholders, editable in the admin product screen</td></tr>
+            <tr><td>Delivery charge and free-delivery threshold</td><td class="wrap">Flat charge with a threshold, both settings rows</td></tr>
+            <tr><td>Offline payment methods</td><td class="wrap">Cash on delivery, bank transfer, UPI on confirmation, pay on collection — all editable</td></tr>
+            <tr><td>Currency and locale</td><td class="wrap">INR with Indian digit grouping, configurable</td></tr>
+            <tr><td>Email verification</td><td class="wrap">Off by default; the flow exists behind a setting and never blocks local development</td></tr>
+            <tr><td>SMTP provider</td><td class="wrap">Environment variables only; nothing committed</td></tr>
+            <tr><td>Database hosting</td><td class="wrap">PostgreSQL container with a named volume; the schema moves to RDS unchanged</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="end">
+    Karvya phase one · offline payment only · online gateway deferred to phase two behind an existing interface.
+  </footer>
+
+</div>

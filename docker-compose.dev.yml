@@ -1,0 +1,25 @@
+# Local development overlay. Exposes the database so the backend can run
+# outside Docker against it.
+#
+# Host port 55432, not 5432: a native PostgreSQL service may already own 5432
+# on the developer machine, and a clash there fails as a confusing
+# "password authentication failed" rather than a bind error.
+#
+# Never used in production - deploy with `docker compose -f docker-compose.yml up -d` only.
+services:
+  db:
+    ports:
+      - "55432:5432"
+
+  # Local mail sink. Without one, every notification in development fails and
+  # retries against nothing, which buries real errors in noise. Mailpit accepts
+  # everything on 1025 and shows it at http://localhost:8025 - so the outbox can
+  # actually be watched working.
+  mail:
+    image: axllent/mailpit:v1.21
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 500

@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+logging:
+  level:
+    com.karvya.store: DEBUG
+    org.hibernate.SQL: DEBUG
+
+app:
+  storage-dir: ${APP_STORAGE_DIR:../media}
+
+  # Relaxed for development so repeated end-to-end runs are not throttled.
+  # Production uses the stricter defaults in application.yml.
+  security:
+    registrations-per-hour-per-ip: 500
+    login-attempts-per-window-per-ip: 500
+    password-resets-per-hour-per-ip: 500
+    enquiries-per-hour-per-ip: 500

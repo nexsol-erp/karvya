@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:17.5-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      APP_COOKIE_SECURE: ${APP_COOKIE_SECURE:-true}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_BASE_URL: ${APP_BASE_URL}
+      APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME}
+      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
+      APP_WHATSAPP_NUMBER: ${APP_WHATSAPP_NUMBER}
+      APP_ADMIN_NOTIFICATION_EMAIL: ${APP_ADMIN_NOTIFICATION_EMAIL}
+      APP_STORAGE_DIR: /var/lib/karvya/media
+      APP_OPENAPI_ENABLED: ${APP_OPENAPI_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+    volumes:
+      - media_data:/var/lib/karvya/media
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health/readiness"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  web:
+    # built from the repository root so the image can include nginx/default.conf
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_STORE_NAME: ${VITE_STORE_NAME:-Karvya}
+        VITE_WHATSAPP_NUMBER: ${APP_WHATSAPP_NUMBER:-}
+        VITE_CONTACT_EMAIL: ${APP_ADMIN_NOTIFICATION_EMAIL:-}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    volumes:
+      - media_data:/var/www/media:ro
+
+volumes:
+  db_data:
+  media_data:

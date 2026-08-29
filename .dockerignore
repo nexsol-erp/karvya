@@ -1,0 +1,31 @@
+# The frontend image is built from the repository root so it can pick up
+# nginx/default.conf, which would otherwise send the whole tree - including
+# 80 MB of original photographs - to the daemon on every build.
+
+# secrets, never
+.env
+*.pem
+*.p12
+
+# build output
+**/target/
+**/dist/
+**/node_modules/
+**/test-results/
+**/playwright-report/
+
+# generated media: derivatives are produced by scripts/optimise-images.mjs and
+# live on a volume, and the originals are 80 MB of source material
+media/
+assets/originals/
+
+# tooling and docs
+.git/
+.github/
+.idea/
+.vscode/
+docs/
+scripts/node_modules/
+**/*.log
+**/app.log
+**/run*.log

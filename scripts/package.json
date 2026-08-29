@@ -1,0 +1,7 @@
+{
+  "name": "karvya-image-pipeline",
+  "private": true,
+  "type": "module",
+  "scripts": { "images": "node optimise-images.mjs" },
+  "dependencies": { "sharp": "^0.34.2" }
+}

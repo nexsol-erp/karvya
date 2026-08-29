@@ -1,0 +1,46 @@
+# Datasource comes from the Testcontainers @ServiceConnection, so nothing is
+# configured here. Flyway runs the real migrations, seed catalogue included.
+
+spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+
+app:
+  base-url: http://localhost
+  storage-dir: ./target/test-media
+  mail-from: test@karvya.local
+  admin-notification-email: admin@karvya.local
+  bootstrap-admin:
+    username: admin
+    email: admin@karvya.local
+    # empty, so the bootstrap admin is not created during tests
+    password: ""
+  security:
+    login-max-attempts: 5
+    lockout-duration: PT15M
+    password-reset-ttl: PT1H
+    # relaxed: the suite drives one loopback address and would trip production limits
+    registrations-per-hour-per-ip: 500
+    login-attempts-per-window-per-ip: 500
+    password-resets-per-hour-per-ip: 500
+    enquiries-per-hour-per-ip: 500
+  notifications:
+    # driven explicitly by the tests, never by the scheduler
+    enabled: false
+    max-attempts: 3
+    batch-size: 25
+    poll-interval: PT1M
+
+logging:
+  level:
+    root: WARN
+    com.karvya.store: INFO
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN
