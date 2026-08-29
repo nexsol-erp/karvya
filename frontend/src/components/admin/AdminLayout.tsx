@@ -164,6 +164,12 @@ export function AdminLayout() {
               sx={{ display: { xs: 'none', sm: 'inline-flex' }, maxWidth: 260 }}
             />
           )}
+          {/* The screen existed and worked, but nothing linked to it: an
+              administrator could only reach it by being forced there at first
+              sign-in, or by typing the URL. */}
+          <Button size="small" component={RouterLink} to="/admin/change-password">
+            Change password
+          </Button>
           <Button size="small" onClick={handleSignOut}>
             Sign out
           </Button>

@@ -166,7 +166,8 @@ export interface AdminCategory {
 // ---- settings and customers -------------------------------------------------
 
 export type SettingType =
-  | 'STRING' | 'TEXT' | 'INTEGER' | 'DECIMAL' | 'BOOLEAN' | 'URL' | 'HTML' | 'JSON';
+  | 'STRING' | 'TEXT' | 'INTEGER' | 'DECIMAL' | 'BOOLEAN' | 'URL' | 'HTML' | 'JSON'
+  | 'COLOUR' | 'FONT' | 'SECRET';
 
 export interface SettingView {
   key: string;
@@ -364,6 +365,16 @@ export const saveSettings = (values: Record<string, string>): Promise<SettingVie
     headers: jsonHeaders(),
     body: JSON.stringify({ values }),
   });
+
+export interface MailTestResult {
+  sent: boolean;
+  recipient: string;
+  source: string;
+  error?: string;
+}
+
+export const sendTestEmail = (): Promise<MailTestResult> =>
+  apiFetch('/admin/settings/mail/test', { method: 'POST', headers: jsonHeaders() });
 
 export const listCustomers = (q: string, page: number): Promise<PageResponse<CustomerRow>> =>
   apiFetch(`/admin/customers${query({ q, page, size: 20 })}`);

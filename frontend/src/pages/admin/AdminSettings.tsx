@@ -14,7 +14,8 @@ import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 
 import { SEOHead } from '../../components/common/SEOHead';
-import { adminKeys, listSettings, saveSettings } from '../../api/admin';
+import { adminKeys, listSettings, saveSettings, sendTestEmail } from '../../api/admin';
+import type { MailTestResult } from '../../api/admin';
 import type { SettingView } from '../../api/admin';
 import { ApiError } from '../../api/client';
 
@@ -23,6 +24,7 @@ import { ApiError } from '../../api/client';
  * than one long alphabetical list.
  */
 const GROUP_LABELS: Record<string, string> = {
+  mail: 'Email delivery (SMTP)',
   store: 'Store identity',
   contact: 'Contact details',
   locale: 'Currency and locale',
@@ -37,6 +39,17 @@ export function AdminSettings() {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+  const [testResult, setTestResult] = useState<MailTestResult | null>(null);
+
+  // Reports a delivery failure rather than throwing: a refused login is an
+  // answer, not an error, and the provider's own wording is the useful part.
+  const testMail = useMutation({
+    mutationFn: sendTestEmail,
+    onSuccess: setTestResult,
+    onError: () =>
+      setTestResult({ sent: false, recipient: '', source: 'the current configuration',
+                      error: 'The request itself failed. Check the backend logs.' }),
+  });
 
   const settings = useQuery({ queryKey: adminKeys.settings, queryFn: listSettings });
 
@@ -139,6 +152,7 @@ export function AdminSettings() {
               {items.map((setting) => {
                 const multiline = setting.valueType === 'TEXT' || setting.valueType === 'HTML';
                 const isBoolean = setting.valueType === 'BOOLEAN';
+                const isSecret = setting.valueType === 'SECRET';
 
                 return (
                   <Box key={setting.key}>
@@ -160,6 +174,10 @@ export function AdminSettings() {
                         <Chip size="small" variant="outlined" label="Empty"
                               sx={{ height: 18, fontSize: 10 }} />
                       )}
+                      {isSecret && !setting.unset && (
+                        <Chip size="small" color="success" variant="outlined" label="Stored"
+                              sx={{ height: 18, fontSize: 10 }} />
+                      )}
                     </Stack>
 
                     {isBoolean ? (
@@ -177,6 +195,11 @@ export function AdminSettings() {
                         fullWidth size="small"
                         multiline={multiline}
                         minRows={multiline ? 3 : undefined}
+                        // a stored secret is never sent back, so the field is
+                        // always empty and empty has to mean "leave it alone"
+                        type={isSecret ? 'password' : 'text'}
+                        autoComplete={isSecret ? 'new-password' : undefined}
+                        placeholder={isSecret && !setting.unset ? 'Stored — leave blank to keep' : undefined}
                         value={draft[setting.key] ?? ''}
                         onChange={(e) => setDraft({ ...draft, [setting.key]: e.target.value })}
                         helperText={
@@ -190,6 +213,35 @@ export function AdminSettings() {
                 );
               })}
             </Stack>
+
+            {group === 'mail' && (
+              <Box sx={{ mt: 2.5, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => testMail.mutate()}
+                  disabled={testMail.isPending || dirty}
+                >
+                  {testMail.isPending ? 'Sending…' : 'Send a test email to myself'}
+                </Button>
+                <Typography variant="body2" sx={{ mt: 0.75 }}>
+                  {dirty
+                    ? 'Save your changes first — the test uses what is stored.'
+                    : 'Delivery failures are hidden from shoppers by design, so this is the only way to know it works.'}
+                </Typography>
+                {testResult && (
+                  <Alert
+                    severity={testResult.sent ? 'success' : 'error'}
+                    sx={{ mt: 1.5 }}
+                    onClose={() => setTestResult(null)}
+                  >
+                    {testResult.sent
+                      ? `Sent to ${testResult.recipient} using ${testResult.source}.`
+                      : `Failed using ${testResult.source}: ${testResult.error}`}
+                  </Alert>
+                )}
+              </Box>
+            )}
           </Card>
         ))}
       </Stack>

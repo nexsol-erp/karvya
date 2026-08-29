@@ -56,6 +56,21 @@ public class AdminSettingsController {
         return settings.update(request.values(), actor());
     }
 
+    /**
+     * Sends a message to the signed-in administrator using the current mail
+     * settings.
+     *
+     * <p>Without this the only way to learn that SMTP is wrong is to wait for a
+     * customer to place an order and not receive anything. The outbox hides
+     * delivery failures from the shopper by design, which is right for them and
+     * useless for whoever is configuring it.
+     */
+    @PostMapping("/settings/mail/test")
+    @Operation(summary = "Send a test email to the signed-in administrator")
+    public Map<String, Object> sendTestEmail() {
+        return settings.sendTestEmail(CurrentUserArgument.require().getEmail());
+    }
+
     // ---- categories -------------------------------------------------------
 
     @GetMapping("/categories")

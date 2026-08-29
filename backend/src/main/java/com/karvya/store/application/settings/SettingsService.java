@@ -53,6 +53,14 @@ public class SettingsService {
     public static final String FONT_BODY = "theme.font_body";
     public static final String CORNER_RADIUS = "theme.corner_radius";
 
+    public static final String MAIL_HOST = "mail.host";
+    public static final String MAIL_PORT = "mail.port";
+    public static final String MAIL_USERNAME = "mail.username";
+    public static final String MAIL_PASSWORD = "mail.password";
+    public static final String MAIL_FROM = "mail.from";
+    public static final String MAIL_AUTH = "mail.auth";
+    public static final String MAIL_STARTTLS = "mail.starttls";
+
     private final SiteSettingRepository repository;
     private final AtomicReference<Map<String, String>> cache = new AtomicReference<>(Map.of());
 
@@ -114,6 +122,11 @@ public class SettingsService {
     }
 
     /** Empty means the rule is switched off, which is not the same as zero. */
+    /** Anything other than a stored "true" is false, including an unset key. */
+    public boolean getBoolean(String key, boolean fallback) {
+        return find(key).map(Boolean::parseBoolean).orElse(fallback);
+    }
+
     public Optional<BigDecimal> getOptionalMoney(String key) {
         return find(key).flatMap(raw -> {
             try {

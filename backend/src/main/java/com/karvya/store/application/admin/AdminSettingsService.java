@@ -2,6 +2,8 @@ package com.karvya.store.application.admin;
 
 import com.karvya.store.application.settings.SettingsService;
 import com.karvya.store.application.settings.ThemeFonts;
+import com.karvya.store.application.notification.EmailSender;
+import com.karvya.store.infrastructure.mail.MailSenderProvider;
 import com.karvya.store.domain.ConflictException;
 import com.karvya.store.domain.NotFoundException;
 import com.karvya.store.domain.model.SettingType;
@@ -50,9 +52,13 @@ public class AdminSettingsService {
             boolean unset
     ) {
         static SettingView from(SiteSetting setting) {
-            return new SettingView(setting.getKey(), setting.getValue(), setting.getValueType(),
-                    setting.getDescription(), setting.isPlaceholder(),
-                    setting.getValue() == null || setting.getValue().isBlank());
+            boolean unset = setting.getValue() == null || setting.getValue().isBlank();
+            // A secret is reported as stored or not, never echoed. Returning it
+            // would put an SMTP password in every admin's browser history and
+            // in any log that captured the response.
+            String value = setting.getValueType() == SettingType.SECRET ? null : setting.getValue();
+            return new SettingView(setting.getKey(), value, setting.getValueType(),
+                    setting.getDescription(), setting.isPlaceholder(), unset);
         }
     }
 
@@ -77,10 +83,15 @@ public class AdminSettingsService {
 
     private final SiteSettingRepository repository;
     private final SettingsService settings;
+    private final EmailSender emails;
+    private final MailSenderProvider mailSenders;
 
-    public AdminSettingsService(SiteSettingRepository repository, SettingsService settings) {
+    public AdminSettingsService(SiteSettingRepository repository, SettingsService settings,
+                                EmailSender emails, MailSenderProvider mailSenders) {
         this.repository = repository;
         this.settings = settings;
+        this.emails = emails;
+        this.mailSenders = mailSenders;
     }
 
     @Transactional(readOnly = true)
@@ -107,6 +118,14 @@ public class AdminSettingsService {
                 // an unknown key is a client bug, not something to create
                 throw new NotFoundException("Setting", entry.getKey());
             }
+            // The form cannot show a secret, so it submits an empty field for
+            // one it is not changing. Treating that as a clear would wipe the
+            // SMTP password every time an unrelated setting was saved.
+            boolean blank = entry.getValue() == null || entry.getValue().isBlank();
+            if (setting.getValueType() == SettingType.SECRET && blank) {
+                continue;
+            }
+
             cleaned.put(entry.getKey(), coerce(setting, entry.getValue()));
         }
 
@@ -116,6 +135,41 @@ public class AdminSettingsService {
 
         log.info("{} updated {} settings", actor, cleaned.size());
         return listAll();
+    }
+
+    /**
+     * Sends a message to the given address using whatever mail configuration is
+     * current, and reports what happened.
+     *
+     * <p>Deliberately not queued through the outbox. The outbox exists to hide
+     * a delivery failure from a shopper and retry it later, which is exactly
+     * the wrong behaviour here: the administrator is asking whether it works
+     * right now, so the answer has to be synchronous and has to include the
+     * error when there is one.
+     */
+    public Map<String, Object> sendTestEmail(String recipient) {
+        String source = mailSenders.isConfiguredInSettings() ? "site settings" : "MAIL_* environment";
+        try {
+            emails.send(recipient,
+                    "Karvya test message",
+                    "<p>Your shop can send email.</p>"
+                            + "<p>This was sent using the configuration from <strong>"
+                            + source + "</strong>, from " + mailSenders.from() + ".</p>");
+
+            log.info("Test email sent to {} using {}", recipient, source);
+            return Map.of("sent", true, "recipient", recipient, "source", source);
+
+        } catch (RuntimeException e) {
+            // the cause carries the provider's own words - "authentication
+            // failed", "relay denied" - which is the whole value of the button
+            Throwable root = e;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            log.warn("Test email to {} failed: {}", recipient, root.getMessage());
+            return Map.of("sent", false, "recipient", recipient, "source", source,
+                    "error", String.valueOf(root.getMessage()));
+        }
     }
 
     private static final java.util.regex.Pattern HEX_COLOUR =
@@ -184,6 +238,9 @@ public class AdminSettingsService {
                 }
                 yield value;
             }
+            // stored verbatim: an API key is not markup and must not be
+            // altered on the way in
+            case SECRET -> value;
             case STRING, TEXT -> Jsoup.clean(value, Safelist.none());
         };
     }
