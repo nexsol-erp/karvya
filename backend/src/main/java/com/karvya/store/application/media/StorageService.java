@@ -19,6 +19,15 @@ public interface StorageService {
      */
     String store(String keyPrefix, String extension, InputStream content);
 
+    /**
+     * Stores a file at an exact key, replacing anything already there.
+     *
+     * <p>Used where the caller must control the name because something else
+     * derives it - the storefront builds rendition URLs from the base key and
+     * a width, so those files cannot be given generated names.
+     */
+    void storeAt(String key, InputStream content);
+
     /** Removes a stored file. Missing keys are not an error. */
     void delete(String key);
 

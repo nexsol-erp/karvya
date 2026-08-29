@@ -96,6 +96,7 @@ app:
   storage-dir: ${APP_STORAGE_DIR:./media}
   mail-from: ${MAIL_FROM:orders@karvya.local}
   admin-notification-email: ${APP_ADMIN_NOTIFICATION_EMAIL:owner@example.com}
+  whats-app-number: ${APP_WHATSAPP_NUMBER:}
   bootstrap-admin:
     username: ${APP_ADMIN_USERNAME:admin}
     email: ${APP_ADMIN_EMAIL:admin@example.com}

@@ -7,10 +7,14 @@ import com.karvya.store.domain.model.AppUser;
 import com.karvya.store.domain.model.CustomerAddress;
 import com.karvya.store.domain.repository.AppUserRepository;
 import com.karvya.store.domain.repository.CustomerAddressRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Saved delivery addresses.
@@ -23,6 +27,8 @@ import java.util.List;
 public class AddressService {
 
     /** A cap, so an account cannot be used to accumulate unbounded rows. */
+    private static final Logger log = LoggerFactory.getLogger(AddressService.class);
+
     private static final int MAX_ADDRESSES_PER_USER = 20;
 
     private final CustomerAddressRepository addresses;
@@ -89,6 +95,88 @@ public class AddressService {
         CustomerAddress address = require(userId, addressId);
         setDefaultIfRequested(userId, address, true);
         return AddressDtos.Response.from(address);
+    }
+
+    /**
+     * Saves the address a signed-in customer typed at checkout and makes it
+     * their default, so the next order offers it instead of asking again.
+     *
+     * <p>Deliberately silent about every failure it can reach. This runs inside
+     * the order's transaction, and an order must never be lost because the
+     * address book could not be updated - the order is what the customer came
+     * for, the saved address is a convenience. The only two things that could
+     * go wrong are handled by returning rather than throwing: a full address
+     * book, and an account that has since disappeared.
+     *
+     * <p>An address the customer already has is not duplicated; it is promoted
+     * to default instead, so ordering to an old address twice does not fill the
+     * list with copies of it.
+     */
+    @Transactional
+    public void rememberFromCheckout(Long userId, AddressDtos.Request request) {
+        List<CustomerAddress> existing =
+                addresses.findByUserIdOrderByDefaultAddressDescCreatedAtDesc(userId);
+
+        Optional<CustomerAddress> match = existing.stream()
+                .filter(address -> sameAddress(address, request))
+                .findFirst();
+
+        if (match.isPresent()) {
+            setDefaultIfRequested(userId, match.get(), true);
+            return;
+        }
+
+        if (existing.size() >= MAX_ADDRESSES_PER_USER) {
+            log.info("Address book is full for account {}; checkout address not saved", userId);
+            return;
+        }
+
+        AppUser user = users.findById(userId).orElse(null);
+        if (user == null) {
+            return;
+        }
+
+        CustomerAddress address = CustomerAddress.forUser(user);
+        apply(address, request);
+        // cleared and flushed before the insert, so the new default row never
+        // meets the old one inside the same statement batch
+        setDefaultIfRequested(userId, address, true);
+        addresses.save(address);
+    }
+
+    /**
+     * Promotes an address the customer chose at checkout, so the one they last
+     * ordered to is the one offered next time.
+     */
+    @Transactional
+    public void promoteToDefault(Long userId, Long addressId) {
+        addresses.findByIdAndUserId(addressId, userId)
+                .ifPresent(address -> setDefaultIfRequested(userId, address, true));
+    }
+
+    /**
+     * Whether a stored address is the same place as one typed at checkout.
+     *
+     * <p>Compared on the fields that identify a destination, after folding case
+     * and runs of whitespace, and with the phone reduced to its digits - so
+     * "+91 97468 00113" and "9746800113" are not stored twice.
+     */
+    private static boolean sameAddress(CustomerAddress address, AddressDtos.Request request) {
+        return norm(address.getRecipientName()).equals(norm(request.recipientName()))
+                && digits(address.getPhone()).equals(digits(request.phone()))
+                && norm(address.getLine1()).equals(norm(request.line1()))
+                && norm(address.getLine2()).equals(norm(request.line2()))
+                && norm(address.getCity()).equals(norm(request.city()))
+                && norm(address.getState()).equals(norm(request.state()))
+                && norm(address.getPostalCode()).equals(norm(request.postalCode()));
+    }
+
+    private static String norm(String value) {
+        return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    private static String digits(String value) {
+        return value == null ? "" : value.replaceAll("\\D", "");
     }
 
     private CustomerAddress require(Long userId, Long addressId) {

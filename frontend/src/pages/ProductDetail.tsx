@@ -26,7 +26,7 @@ import { StockBadge } from '../components/common/StockBadge';
 import { SEOHead } from '../components/common/SEOHead';
 import { NotFound } from './NotFound';
 import { ApiError } from '../api/client';
-import { config, whatsAppEnabled } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import { useCart } from '../hooks/useCart';
 import { formatMoney, whatsAppLink } from '../lib/format';
 
@@ -46,6 +46,7 @@ function Attribute({ label, value }: { label: string; value: string | null }) {
 }
 
 export function ProductDetail() {
+  const settings = useSiteSettings();
   const { slug = '' } = useParams();
   const [selected, setSelected] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -108,7 +109,7 @@ export function ProductDetail() {
   const alreadyAtStockLimit = quantityOf(p.id) >= p.stockQuantity;
 
   const enquiry = [
-    `Hello ${config.storeName}, I would like to ask about this piece:`,
+    `Hello ${settings.storeName}, I would like to ask about this piece:`,
     '',
     p.name,
     canonicalUrl,
@@ -128,7 +129,7 @@ export function ProductDetail() {
     offers: {
       '@type': 'Offer',
       price: String(p.price),
-      priceCurrency: config.currency,
+      priceCurrency: settings.currency,
       availability: p.inStock
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
@@ -210,7 +211,7 @@ export function ProductDetail() {
               </Typography>
               <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                 <Typography sx={{ fontSize: '1.6rem', fontWeight: 700 }}>
-                  {formatMoney(p.price, config.currency, config.locale)}
+                  {formatMoney(p.price, settings.currency, settings.locale)}
                 </Typography>
                 <StockBadge inStock={p.inStock} quantity={p.stockQuantity} size="medium" />
               </Stack>
@@ -290,13 +291,16 @@ export function ProductDetail() {
                   {adding ? 'Adding…' : 'Add to cart'}
                 </Button>
 
-                {alreadyAtStockLimit && (
+                {/* the note explains why the button is disabled, but it must
+                    not replace the confirmation of an add just made - adding
+                    the last unit is exactly when both conditions are true */}
+                {alreadyAtStockLimit && !added && (
                   <Typography variant="body2" color="text.secondary">
                     All {p.stockQuantity} in stock are already in your cart.
                   </Typography>
                 )}
 
-                {added && !alreadyAtStockLimit && (
+                {added && (
                   <Alert severity="success" onClose={() => setAdded(false)}>
                     Added to your cart.{' '}
                     <Link component={RouterLink} to="/cart">
@@ -307,10 +311,10 @@ export function ProductDetail() {
               </Stack>
             )}
 
-            {whatsAppEnabled() && (
+            {settings.whatsAppEnabled && (
               <Button
                 component="a"
-                href={whatsAppLink(config.whatsAppNumber, enquiry)}
+                href={whatsAppLink(settings.whatsAppNumber, enquiry)}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="outlined"

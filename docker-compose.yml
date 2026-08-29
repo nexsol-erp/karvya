@@ -56,8 +56,6 @@ services:
       dockerfile: frontend/Dockerfile
       args:
         VITE_STORE_NAME: ${VITE_STORE_NAME:-Karvya}
-        VITE_WHATSAPP_NUMBER: ${APP_WHATSAPP_NUMBER:-}
-        VITE_CONTACT_EMAIL: ${APP_ADMIN_NOTIFICATION_EMAIL:-}
     restart: unless-stopped
     depends_on:
       backend:

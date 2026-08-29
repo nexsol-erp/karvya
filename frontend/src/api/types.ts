@@ -5,6 +5,16 @@ export interface ImageRef {
   alt: string;
   width: number | null;
   height: number | null;
+  /**
+   * Which renditions were written for this photograph, widest support last.
+   * Offering one that does not exist shows a broken image, so it is reported
+   * rather than assumed.
+   *
+   * <p>Optional because a few places build a reference from a bare storage key
+   * - an admin thumbnail, an order line - where the formats were never loaded.
+   * Those fall back to JPEG, which every photograph has.
+   */
+  formats?: string[];
 }
 
 export interface ProductSummary {

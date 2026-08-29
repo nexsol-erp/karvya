@@ -32,9 +32,10 @@ import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../../api/orders';
 import type { OrderStatus, PaymentStatus } from '../../api/orders';
 import { ApiError } from '../../api/client';
 import { formatMoney } from '../../lib/format';
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 
 export function AdminOrderDetail() {
+  const settings = useSiteSettings();
   const { orderNumber = '' } = useParams();
   const queryClient = useQueryClient();
 
@@ -116,7 +117,7 @@ export function AdminOrderDetail() {
 
   const detail = order.data;
   const o = detail.order;
-  const money = (value: string | number) => formatMoney(value, o.currency, config.locale);
+  const money = (value: string | number) => formatMoney(value, o.currency, settings.locale);
 
   const openPaymentDialog = () => {
     setPayment((prev) => ({

@@ -46,11 +46,17 @@ public final class AdminProductDtos {
             Integer width,
             Integer height,
             int displayOrder,
-            boolean primary
+            boolean primary,
+            /** Which renditions exist; see ImageRef for why it is not inferred. */
+            List<String> formats
     ) {
         public static Image from(ProductImage image) {
             return new Image(image.getId(), image.getStorageKey(), image.getAltText(),
-                    image.getWidth(), image.getHeight(), image.getDisplayOrder(), image.isPrimary());
+                    image.getWidth(), image.getHeight(), image.getDisplayOrder(), image.isPrimary(),
+                    java.util.Arrays.stream(image.getFormats().split(","))
+                            .map(String::trim)
+                            .filter(format -> !format.isEmpty())
+                            .toList());
         }
     }
 

@@ -14,7 +14,7 @@ import { catalogKeys, searchProducts, getCategories } from '../api/catalog';
 import { ProductGrid } from '../components/catalog/ProductGrid';
 import { ProductImage } from '../components/common/ProductImage';
 import { SEOHead } from '../components/common/SEOHead';
-import { config, whatsAppEnabled } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import { whatsAppLink } from '../lib/format';
 import { palette } from '../theme';
 
@@ -29,6 +29,7 @@ const FEATURED_QUERY = { featured: true, size: 8, sort: 'RELEVANCE' } as const;
  * priority while everything below stays lazy.
  */
 export function Landing() {
+  const settings = useSiteSettings();
   const featured = useQuery({
     queryKey: catalogKeys.products(FEATURED_QUERY),
     queryFn: () => searchProducts(FEATURED_QUERY),
@@ -45,7 +46,7 @@ export function Landing() {
   return (
     <>
       <SEOHead
-        title={config.storeName}
+        title={settings.storeName}
         description="Handwoven coir bird houses and nesting shelters, each piece shaped by hand from natural coconut fibre."
         path="/"
         imageKey={hero?.image?.key ?? null}
@@ -82,12 +83,12 @@ export function Landing() {
                     Shop collection
                   </Button>
 
-                  {whatsAppEnabled() && (
+                  {settings.whatsAppEnabled && (
                     <Button
                       component="a"
                       href={whatsAppLink(
-                        config.whatsAppNumber,
-                        `Hello ${config.storeName}, I would like to know more about your pieces.`,
+                        settings.whatsAppNumber,
+                        `Hello ${settings.storeName}, I would like to know more about your pieces.`,
                       )}
                       target="_blank"
                       rel="noopener noreferrer"

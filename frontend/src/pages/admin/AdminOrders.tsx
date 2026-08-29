@@ -28,12 +28,13 @@ import type { OrderFilters } from '../../api/admin';
 import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../../api/orders';
 import type { OrderStatus, PaymentStatus } from '../../api/orders';
 import { formatMoney } from '../../lib/format';
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 
 const ORDER_STATUSES = Object.keys(ORDER_STATUS_LABELS) as OrderStatus[];
 const PAYMENT_STATUSES = Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[];
 
 export function AdminOrders() {
+  const settings = useSiteSettings();
   const [params, setParams] = useSearchParams();
 
   const q = params.get('q') ?? '';
@@ -79,7 +80,7 @@ export function AdminOrders() {
   };
 
   const money = (value: string | number, currency: string) =>
-    formatMoney(value, currency, config.locale);
+    formatMoney(value, currency, settings.locale);
 
   const rows = orders.data?.content ?? [];
   const filtersApplied = Boolean(q || status || paymentStatus || placedFrom || placedTo);

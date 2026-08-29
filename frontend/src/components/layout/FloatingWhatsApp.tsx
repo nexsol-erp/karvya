@@ -2,7 +2,7 @@ import Fab from '@mui/material/Fab';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import Tooltip from '@mui/material/Tooltip';
 
-import { config, whatsAppEnabled } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { whatsAppLink } from '../../lib/format';
 
 /**
@@ -14,15 +14,16 @@ import { whatsAppLink } from '../../lib/format';
  * link that goes nowhere.
  */
 export function FloatingWhatsApp() {
-  if (!whatsAppEnabled()) return null;
+  const settings = useSiteSettings();
+  if (!settings.whatsAppEnabled) return null;
 
-  const message = `Hello ${config.storeName}, I would like to know more about your pieces.`;
+  const message = `Hello ${settings.storeName}, I would like to know more about your pieces.`;
 
   return (
     <Tooltip title="Chat on WhatsApp" placement="left">
       <Fab
         component="a"
-        href={whatsAppLink(config.whatsAppNumber, message)}
+        href={whatsAppLink(settings.whatsAppNumber, message)}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"

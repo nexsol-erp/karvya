@@ -32,6 +32,13 @@ export function formatMoney(
  * otherwise truncate the text.
  */
 export function whatsAppLink(number: string, message: string): string {
-  const digits = number.replace(/\D/g, '');
+  // The server normalises this already, but a number can also arrive from a
+  // build-time fallback that nobody cleaned. wa.me wants country code first
+  // with no plus and no international prefix: +91 97468 00113 and
+  // 0091-9746800113 must both become 919746800113.
+  let digits = number.replace(/\D/g, '');
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }

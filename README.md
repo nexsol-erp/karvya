@@ -93,7 +93,7 @@ as a default.
 | `SPRING_PROFILES_ACTIVE` | `prod` or `dev`. |
 | `APP_BASE_URL` | Public origin. Used in emails, canonical URLs and the sitemap. |
 | `APP_ADMIN_USERNAME` / `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD` | The first administrator, created on first boot only. With no password set, **no account is created** and the log says so. |
-| `APP_WHATSAPP_NUMBER` | Digits only, country code first. Empty hides every WhatsApp link. |
+| `APP_WHATSAPP_NUMBER` | Fallback only, used until a number is saved under **Settings -> contact.whatsapp_number**, which wins. Separators, `+` and a leading `00` are all accepted and stripped. Empty on both hides every WhatsApp link rather than showing a broken one. |
 | `APP_ADMIN_NOTIFICATION_EMAIL` | Where order and enquiry alerts go. |
 | `APP_STORAGE_DIR` | Upload directory. Mounted as a volume. |
 | `APP_OPENAPI_ENABLED` | Swagger UI. **Keep `false` in production.** |
@@ -292,3 +292,4 @@ supplied. Product descriptions state only what is visible in the photograph.
 git remote add origin git@github.com:nexsol-erp/karvya.git
 git branch -M main
 git push -u origin main
+admin@karvya.local / Karvya_admin_2026 

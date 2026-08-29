@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -9,6 +9,7 @@ import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -25,7 +26,7 @@ import { adminKeys, listProducts, setProductStatus } from '../../api/admin';
 import type { ProductStatus } from '../../api/admin';
 import { ApiError } from '../../api/client';
 import { formatMoney } from '../../lib/format';
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { palette } from '../../theme';
 
 const STATUSES: ProductStatus[] = ['DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED'];
@@ -38,6 +39,7 @@ const STATUS_TONE: Record<ProductStatus, string> = {
 };
 
 export function AdminProducts() {
+  const settings = useSiteSettings();
   const [params, setParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
@@ -73,15 +75,23 @@ export function AdminProducts() {
   };
 
   const rows = products.data?.content ?? [];
-  const money = (value: string | number) => formatMoney(value, config.currency, config.locale);
+  const money = (value: string | number) => formatMoney(value, settings.currency, settings.locale);
 
   return (
     <Box>
       <SEOHead title="Products" path="/admin/products" noIndex />
 
-      <Typography variant="h1" sx={{ fontSize: '1.9rem' }}>
-        Products
-      </Typography>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 2 }}
+      >
+        <Typography variant="h1" sx={{ fontSize: '1.9rem' }}>
+          Products
+        </Typography>
+        <Button component={RouterLink} to="/admin/products/new" variant="contained" size="small">
+          New product
+        </Button>
+      </Stack>
       <Typography variant="body2" sx={{ mb: 2.5 }}>
         {products.isPending ? 'Loading…' : `${products.data?.totalElements ?? 0} in the catalogue`}
       </Typography>
@@ -149,7 +159,13 @@ export function AdminProducts() {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{product.name}</Typography>
+                        <Link
+                          component={RouterLink}
+                          to={`/admin/products/${product.id}`}
+                          sx={{ fontSize: 14, fontWeight: 600 }}
+                        >
+                          {product.name}
+                        </Link>
                         <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                           <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 11.5 }}>
                             {product.sku}

@@ -17,6 +17,7 @@ app:
   storage-dir: ./target/test-media
   mail-from: test@karvya.local
   admin-notification-email: admin@karvya.local
+  whats-app-number: ""
   bootstrap-admin:
     username: admin
     email: admin@karvya.local

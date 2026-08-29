@@ -115,12 +115,15 @@ export interface AdminProductRow {
 
 export interface AdminProductImage {
   id: number;
+  /** A base name, not a file: renditions hang off it as {key}-{width}.{format}. */
   storageKey: string;
   altText: string;
   width: number | null;
   height: number | null;
   displayOrder: number;
   primary: boolean;
+  /** Which renditions exist. Uploads are JPEG only; seeded photographs have all three. */
+  formats: string[];
 }
 
 export interface AdminProductDetail {

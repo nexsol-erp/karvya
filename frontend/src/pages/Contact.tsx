@@ -8,7 +8,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/EmailOutlined';
 
 import { SEOHead } from '../components/common/SEOHead';
-import { config, whatsAppEnabled } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import { whatsAppLink } from '../lib/format';
 
 /**
@@ -20,14 +20,15 @@ import { whatsAppLink } from '../lib/format';
  * than no form.
  */
 export function Contact() {
-  const hasEmail = Boolean(config.contactEmail);
-  const hasWhatsApp = whatsAppEnabled();
+  const settings = useSiteSettings();
+  const hasEmail = Boolean(settings.contactEmail);
+  const hasWhatsApp = settings.whatsAppEnabled;
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 5, md: 9 } }}>
       <SEOHead
         title="Contact"
-        description={`Get in touch with ${config.storeName}.`}
+        description={`Get in touch with ${settings.storeName}.`}
         path="/contact"
       />
 
@@ -54,8 +55,8 @@ export function Contact() {
           <Button
             component="a"
             href={whatsAppLink(
-              config.whatsAppNumber,
-              `Hello ${config.storeName}, I have a question.`,
+              settings.whatsAppNumber,
+              `Hello ${settings.storeName}, I have a question.`,
             )}
             target="_blank"
             rel="noopener noreferrer"
@@ -70,12 +71,12 @@ export function Contact() {
         {hasEmail && (
           <Button
             component="a"
-            href={`mailto:${config.contactEmail}`}
+            href={`mailto:${settings.contactEmail}`}
             variant="outlined"
             size="large"
             startIcon={<EmailIcon />}
           >
-            {config.contactEmail}
+            {settings.contactEmail}
           </Button>
         )}
       </Stack>

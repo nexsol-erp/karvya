@@ -22,13 +22,14 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ProductImage } from '../components/common/ProductImage';
 import { useCart } from '../hooks/useCart';
 import { formatMoney } from '../lib/format';
-import { config } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export function Cart() {
+  const settings = useSiteSettings();
   const { cart, isLoading, setQuantity, removeItem, dismissAdjustments } = useCart();
   const [busyProduct, setBusyProduct] = useState<number | null>(null);
 
-  const money = (value: string | number) => formatMoney(value, cart.currency, config.locale);
+  const money = (value: string | number) => formatMoney(value, cart.currency, settings.locale);
 
   async function change(productId: number, quantity: number) {
     setBusyProduct(productId);

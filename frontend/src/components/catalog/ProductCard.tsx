@@ -8,7 +8,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { ProductImage } from '../common/ProductImage';
 import { StockBadge } from '../common/StockBadge';
 import { formatMoney } from '../../lib/format';
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import type { ProductSummary } from '../../api/types';
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
 
 /** One product on the shop grid. The whole card is a single link target. */
 export function ProductCard({ product, priority = false }: Props) {
+  const settings = useSiteSettings();
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <CardActionArea
@@ -62,7 +63,7 @@ export function ProductCard({ product, priority = false }: Props) {
 
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography component="p" sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
-              {formatMoney(product.price, config.currency, config.locale)}
+              {formatMoney(product.price, settings.currency, settings.locale)}
             </Typography>
             <StockBadge inStock={product.inStock} quantity={product.stockQuantity} />
           </Stack>

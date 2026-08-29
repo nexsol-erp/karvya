@@ -67,6 +67,9 @@ export function AdminSettings() {
     const byGroup = new Map<string, SettingView[]>();
     for (const setting of settings.data ?? []) {
       const group = setting.key.split('.')[0];
+      // appearance has its own screen, with a preview and contrast readings
+      // that a row of hex codes here could not give
+      if (group === 'theme') continue;
       byGroup.set(group, [...(byGroup.get(group) ?? []), setting]);
     }
     return [...byGroup.entries()].sort(([a], [b]) =>

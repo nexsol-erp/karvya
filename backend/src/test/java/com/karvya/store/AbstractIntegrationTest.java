@@ -3,6 +3,7 @@ package com.karvya.store;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.karvya.store.domain.model.Product;
 import com.karvya.store.domain.repository.CategoryRepository;
+import com.karvya.store.domain.repository.EmailNotificationRepository;
 import com.karvya.store.domain.repository.ProductRepository;
 import com.karvya.store.infrastructure.security.RateLimiter;
 import org.junit.jupiter.api.AfterEach;
@@ -73,6 +74,9 @@ public abstract class AbstractIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private EmailNotificationRepository emailNotificationRepository;
+
+    @Autowired
     private TransactionTemplate transactionTemplate;
 
     /**
@@ -132,6 +136,16 @@ public abstract class AbstractIntegrationTest {
                                     .inCategory(category.getSlug()))
                             .isEmpty())
                     .forEach(categoryRepository::delete);
+
+            // The outbox is global: the dispatcher claims whatever is due,
+            // regardless of which test enqueued it. A failed send is not lost,
+            // it is scheduled for retry - so notifications a previous test left
+            // PENDING become due again once their backoff elapses, and the next
+            // drain delivers them alongside its own. That makes any assertion
+            // on "how many went out" depend on how long the suite has been
+            // running, which is why it passes locally and fails on a slower
+            // machine.
+            emailNotificationRepository.deleteAll();
         });
     }
 

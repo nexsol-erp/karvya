@@ -31,7 +31,13 @@ public class ImageUploadValidator {
     private static final int MAX_DIMENSION = 6000;
     private static final int MIN_DIMENSION = 200;
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
+    /**
+     * WebP is deliberately absent. A plain JRE has no WebP decoder, so an
+     * accepted .webp could not be resized into the renditions the storefront
+     * asks for - it would be stored and then never render. Accepting only what
+     * can be processed end to end is better than accepting and failing later.
+     */
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
 
     private static final Map<String, String> CONTENT_TYPE_BY_EXTENSION = Map.of(
             "jpg", "image/jpeg",

@@ -17,6 +17,8 @@ public record AppProperties(
         String storageDir,
         String mailFrom,
         String adminNotificationEmail,
+        /** Fallback when no number has been set through the admin. */
+        String whatsAppNumber,
         BootstrapAdmin bootstrapAdmin,
         Security security,
         Notifications notifications

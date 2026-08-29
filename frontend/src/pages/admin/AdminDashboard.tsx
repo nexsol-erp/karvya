@@ -20,7 +20,7 @@ import { SEOHead } from '../../components/common/SEOHead';
 import { OrderStatusChip, PaymentStatusChip } from '../../components/admin/StatusChip';
 import { adminKeys, getDashboard } from '../../api/admin';
 import { formatMoney } from '../../lib/format';
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { palette } from '../../theme';
 
 /** A headline number with the context that stops it being misread. */
@@ -85,6 +85,7 @@ function StatTile({
 }
 
 export function AdminDashboard() {
+  const settings = useSiteSettings();
   const dashboard = useQuery({ queryKey: adminKeys.dashboard, queryFn: getDashboard });
 
   if (dashboard.isPending) {
@@ -108,7 +109,7 @@ export function AdminDashboard() {
   }
 
   const d = dashboard.data;
-  const money = (value: string | number) => formatMoney(value, d.currency, config.locale);
+  const money = (value: string | number) => formatMoney(value, d.currency, settings.locale);
   const awaitingPayment = d.ordersByPaymentStatus.AWAITING_PAYMENT ?? 0;
 
   return (

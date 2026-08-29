@@ -1,4 +1,4 @@
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 
 interface Props {
   title: string;
@@ -28,7 +28,8 @@ export function SEOHead({
   noIndex = false,
   structuredData,
 }: Props) {
-  const fullTitle = title === config.storeName ? title : `${title} · ${config.storeName}`;
+  const { storeName } = useSiteSettings();
+  const fullTitle = title === storeName ? title : `${title} · ${storeName}`;
   const origin = typeof window === 'undefined' ? '' : window.location.origin;
   const canonical = path ? `${origin}${path}` : undefined;
   const image = imageKey ? `${origin}/media/${imageKey}-1280.jpg` : undefined;
@@ -45,7 +46,7 @@ export function SEOHead({
       {description && <meta property="og:description" content={description} />}
       {canonical && <meta property="og:url" content={canonical} />}
       {image && <meta property="og:image" content={image} />}
-      <meta property="og:site_name" content={config.storeName} />
+      <meta property="og:site_name" content={storeName} />
       <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
 
       {structuredData && (

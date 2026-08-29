@@ -20,6 +20,7 @@ import ProductsIcon from '@mui/icons-material/Inventory2Outlined';
 import EnquiriesIcon from '@mui/icons-material/ForumOutlined';
 import CustomersIcon from '@mui/icons-material/PeopleOutlined';
 import SettingsIcon from '@mui/icons-material/TuneOutlined';
+import PaletteIcon from '@mui/icons-material/PaletteOutlined';
 import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
 
 import { useAuth } from '../../hooks/useAuth';
@@ -33,6 +34,7 @@ const NAV = [
   { label: 'Products', to: '/admin/products', icon: <ProductsIcon fontSize="small" /> },
   { label: 'Enquiries', to: '/admin/enquiries', icon: <EnquiriesIcon fontSize="small" /> },
   { label: 'Customers', to: '/admin/customers', icon: <CustomersIcon fontSize="small" /> },
+  { label: 'Appearance', to: '/admin/appearance', icon: <PaletteIcon fontSize="small" /> },
   { label: 'Settings', to: '/admin/settings', icon: <SettingsIcon fontSize="small" /> },
 ];
 

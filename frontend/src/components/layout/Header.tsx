@@ -17,7 +17,7 @@ import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import Badge from '@mui/material/Badge';
 import { Link as RouterLink, NavLink, useLocation } from 'react-router-dom';
 
-import { config } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { useCart } from '../../hooks/useCart';
 
 /**
@@ -40,6 +40,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { cart } = useCart();
+  const settings = useSiteSettings();
 
   return (
     <AppBar
@@ -69,7 +70,7 @@ export function Header() {
                 lineHeight: 1.1,
               }}
             >
-              {config.storeName}
+              {settings.storeName}
             </Typography>
             <Typography
               component="span"
@@ -81,7 +82,7 @@ export function Header() {
                 display: { xs: 'none', sm: 'block' },
               }}
             >
-              {config.tagline}
+              {settings.tagline}
             </Typography>
           </Box>
 

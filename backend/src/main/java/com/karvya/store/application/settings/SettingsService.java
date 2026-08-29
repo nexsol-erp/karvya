@@ -44,6 +44,15 @@ public class SettingsService {
     public static final String LOW_STOCK_THRESHOLD = "catalogue.low_stock_threshold";
     public static final String CHECKOUT_NOTICE = "content.checkout_notice";
 
+    public static final String COLOUR_PRIMARY = "theme.colour_primary";
+    public static final String COLOUR_SECONDARY = "theme.colour_secondary";
+    public static final String COLOUR_BACKGROUND = "theme.colour_background";
+    public static final String COLOUR_SURFACE = "theme.colour_surface";
+    public static final String COLOUR_TEXT = "theme.colour_text";
+    public static final String FONT_HEADING = "theme.font_heading";
+    public static final String FONT_BODY = "theme.font_body";
+    public static final String CORNER_RADIUS = "theme.corner_radius";
+
     private final SiteSettingRepository repository;
     private final AtomicReference<Map<String, String>> cache = new AtomicReference<>(Map.of());
 

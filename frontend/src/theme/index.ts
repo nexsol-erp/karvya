@@ -1,8 +1,35 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, darken, getContrastRatio, alpha } from '@mui/material/styles';
 import { palette } from './palette';
+import { DEFAULT_BODY_FONT, DEFAULT_HEADING_FONT, fontStack } from './fonts';
 
-const display = '"Fraunces", "Iowan Old Style", Georgia, serif';
-const body = '"Karla", "Helvetica Neue", Arial, sans-serif';
+/** What an administrator can change from the Appearance screen. */
+export interface ThemeOverrides {
+  colourPrimary?: string | null;
+  colourSecondary?: string | null;
+  colourBackground?: string | null;
+  colourSurface?: string | null;
+  colourText?: string | null;
+  fontHeading?: string | null;
+  fontBody?: string | null;
+  cornerRadius?: number | null;
+}
+
+/** A hex colour, or the built-in default when the setting is empty or malformed. */
+function colour(value: string | null | undefined, fallback: string): string {
+  return value && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+}
+
+/**
+ * Black or white, whichever is legible on the given background.
+ *
+ * <p>Chosen rather than configured. An administrator picking a pale accent
+ * would otherwise get white text on it and an unreadable button, and that is
+ * not a trade-off worth exposing - there is only one right answer for each
+ * background.
+ */
+function readableOn(background: string): string {
+  return getContrastRatio(background, '#FFFFFF') >= 4.5 ? '#FFFFFF' : palette.charcoal;
+}
 
 /**
  * The storefront theme.
@@ -11,36 +38,58 @@ const body = '"Karla", "Helvetica Neue", Arial, sans-serif';
  * Forest green is kept for in-stock and success so that semantic colour never
  * collides with brand colour - a green button and an "in stock" badge would
  * otherwise say the same thing in two different registers.
+ *
+ * <p>Colours and fonts come from site settings. Everything derived from them -
+ * the hover shade, muted text, rules, the focus ring - is computed here rather
+ * than configured, so an owner changes five values and the rest stays coherent.
  */
-export const theme = createTheme({
+export function buildTheme(overrides: ThemeOverrides = {}) {
+  const primary = colour(overrides.colourPrimary, palette.terracotta);
+  const secondary = colour(overrides.colourSecondary, palette.coir);
+  const background = colour(overrides.colourBackground, palette.plaster);
+  const surface = colour(overrides.colourSurface, palette.ivory);
+  const text = colour(overrides.colourText, palette.charcoal);
+
+  const display = fontStack(overrides.fontHeading, DEFAULT_HEADING_FONT);
+  const body = fontStack(overrides.fontBody, DEFAULT_BODY_FONT);
+
+  const radius = Math.min(32, Math.max(0, overrides.cornerRadius ?? 12));
+
+  // muted text and rules are the chosen colours faded toward each other, so a
+  // change of palette does not leave the old greys behind
+  const textMuted = alpha(text, 0.72);
+  const textFaint = alpha(text, 0.55);
+  const rule = alpha(text, 0.14);
+
+  return createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: palette.terracotta,
-      dark: palette.terracottaDeep,
-      contrastText: '#FFFFFF',
+      main: primary,
+      dark: darken(primary, 0.18),
+      contrastText: readableOn(primary),
     },
     secondary: {
-      main: palette.coir,
-      dark: palette.coconut,
-      contrastText: '#FFFFFF',
+      main: secondary,
+      dark: darken(secondary, 0.18),
+      contrastText: readableOn(secondary),
     },
     success: {
       main: palette.forest,
     },
     background: {
-      default: palette.plaster,
-      paper: palette.ivory,
+      default: background,
+      paper: surface,
     },
     text: {
-      primary: palette.charcoal,
-      secondary: palette.charcoalMuted,
-      disabled: palette.stone,
+      primary: text,
+      secondary: textMuted,
+      disabled: textFaint,
     },
-    divider: palette.rule,
+    divider: rule,
   },
 
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: radius },
 
   typography: {
     fontFamily: body,
@@ -50,9 +99,9 @@ export const theme = createTheme({
     h4: { fontFamily: display, fontWeight: 600, lineHeight: 1.25 },
     h5: { fontFamily: body, fontWeight: 700 },
     h6: { fontFamily: body, fontWeight: 700 },
-    subtitle1: { color: palette.charcoalMuted },
+    subtitle1: { color: textMuted },
     body1: { lineHeight: 1.65 },
-    body2: { lineHeight: 1.6, color: palette.charcoalMuted },
+    body2: { lineHeight: 1.6, color: textMuted },
     button: { textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em' },
     overline: { letterSpacing: '0.16em', fontWeight: 600, fontSize: '0.7rem' },
   },
@@ -68,10 +117,10 @@ export const theme = createTheme({
             scrollBehavior: 'auto !important',
           },
         },
-        body: { backgroundColor: palette.plaster },
+        body: { backgroundColor: background },
         // A visible focus ring everywhere, not just where MUI happens to add one.
         ':focus-visible': {
-          outline: `2px solid ${palette.terracotta}`,
+          outline: `2px solid ${primary}`,
           outlineOffset: '3px',
         },
       },
@@ -83,14 +132,14 @@ export const theme = createTheme({
         // v9 dropped the variant+colour override keys. The darker hover comes
         // from palette.primary.dark, which is set to terracottaDeep above.
         root: { borderRadius: 999, paddingInline: 22, paddingBlock: 10 },
-        outlined: { borderColor: palette.rule },
+        outlined: { borderColor: rule },
       },
     },
 
     MuiCard: {
       styleOverrides: {
         root: {
-          border: `1px solid ${palette.rule}`,
+          border: `1px solid ${rule}`,
           boxShadow: '0 1px 2px rgba(51,50,46,0.04), 0 10px 28px -18px rgba(51,50,46,0.28)',
         },
       },
@@ -104,13 +153,17 @@ export const theme = createTheme({
 
     MuiLink: {
       defaultProps: { underline: 'hover' },
-      styleOverrides: { root: { color: palette.terracotta } },
+      styleOverrides: { root: { color: primary } },
     },
 
     MuiAppBar: {
       defaultProps: { elevation: 0, color: 'transparent' },
     },
   },
-});
+  });
+}
+
+/** The built-in look, used before settings arrive and by tests. */
+export const theme = buildTheme();
 
 export { palette };

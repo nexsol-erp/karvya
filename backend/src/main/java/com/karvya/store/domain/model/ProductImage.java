@@ -44,6 +44,16 @@ public class ProductImage {
     @Column(name = "is_primary", nullable = false)
     private boolean primary;
 
+    /**
+     * Which renditions exist on disk, as a comma-separated list of extensions
+     * in the order they should be offered - widest support last.
+     *
+     * <p>The storefront picks a rendition by MIME type without checking that
+     * the file is there, so this has to be recorded rather than assumed.
+     */
+    @Column(nullable = false, length = 64)
+    private String formats = "jpg";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -56,7 +66,8 @@ public class ProductImage {
     }
 
     public static ProductImage of(Product product, String storageKey, String altText,
-                                  String contentType, int width, int height, long bytes) {
+                                  String contentType, int width, int height, long bytes,
+                                  String formats) {
         ProductImage image = new ProductImage();
         image.product = product;
         image.storageKey = storageKey;
@@ -65,6 +76,7 @@ public class ProductImage {
         image.width = width;
         image.height = height;
         image.bytes = bytes;
+        image.formats = formats;
         return image;
     }
 
@@ -87,5 +99,7 @@ public class ProductImage {
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
     public boolean isPrimary() { return primary; }
     public void setPrimary(boolean primary) { this.primary = primary; }
+    public String getFormats() { return formats; }
+    public void setFormats(String formats) { this.formats = formats; }
     public Instant getCreatedAt() { return createdAt; }
 }

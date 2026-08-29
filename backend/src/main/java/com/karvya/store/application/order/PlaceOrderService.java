@@ -3,6 +3,8 @@ package com.karvya.store.application.order;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.karvya.store.application.cart.dto.CartDtos;
+import com.karvya.store.application.identity.AddressService;
+import com.karvya.store.application.identity.dto.AddressDtos;
 import com.karvya.store.application.order.dto.CheckoutRequest;
 import com.karvya.store.application.order.dto.OrderDtos;
 import com.karvya.store.application.settings.SettingsService;
@@ -51,6 +53,7 @@ public class PlaceOrderService {
     private final AppProperties properties;
     private final ObjectMapper objectMapper;
     private final OrderViewMapper viewMapper;
+    private final AddressService addressService;
 
     public PlaceOrderService(ProductRepository products, CustomerOrderRepository orders,
                              PaymentMethodRepository paymentMethods, AppUserRepository users,
@@ -58,7 +61,7 @@ public class PlaceOrderService {
                              EmailNotificationRepository notifications,
                              OrderNumberGenerator orderNumbers, SettingsService settings,
                              AppProperties properties, ObjectMapper objectMapper,
-                             OrderViewMapper viewMapper) {
+                             OrderViewMapper viewMapper, AddressService addressService) {
         this.products = products;
         this.orders = orders;
         this.paymentMethods = paymentMethods;
@@ -71,6 +74,7 @@ public class PlaceOrderService {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.viewMapper = viewMapper;
+        this.addressService = addressService;
     }
 
     /**
@@ -119,6 +123,7 @@ public class PlaceOrderService {
         }
 
         applyDelivery(order, request, customer);
+        rememberDeliveryAddress(request, customer);
 
         BigDecimal subtotal = BigDecimal.ZERO;
         for (Long productId : orderedIds) {
@@ -245,6 +250,35 @@ public class PlaceOrderService {
                 request.postalCode().trim(),
                 blankToNull(request.deliveryNotes()),
                 blankToNull(request.customerComments()));
+    }
+
+/**
+     * Keeps a signed-in customer's delivery address for next time.
+     *
+     * <p>Whichever address this order went to becomes the account default, so
+     * the next checkout offers it already filled in. Guests are skipped: there
+     * is no account to hang an address on.
+     */
+    private void rememberDeliveryAddress(CheckoutRequest request, AppUser customer) {
+        if (customer == null) {
+            return;
+        }
+
+        if (request.savedAddressId() != null) {
+            addressService.promoteToDefault(customer.getId(), request.savedAddressId());
+            return;
+        }
+
+        addressService.rememberFromCheckout(customer.getId(), new AddressDtos.Request(
+                null,
+                request.deliveryName().trim(),
+                request.deliveryPhone().trim(),
+                request.addressLine1().trim(),
+                blankToNull(request.addressLine2()),
+                request.city().trim(),
+                request.state().trim(),
+                request.postalCode().trim(),
+                true));
     }
 
     private BigDecimal deliveryChargeFor(BigDecimal subtotal) {

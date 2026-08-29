@@ -9,5 +9,9 @@ public enum SettingType {
     BOOLEAN,
     URL,
     HTML,
-    JSON
+    JSON,
+    /** A #RRGGBB colour. */
+    COLOUR,
+    /** A typeface name from the permitted list. */
+    FONT
 }

@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { theme } from '../theme';
+import { SiteSettingsProvider } from '../hooks/useSiteSettings';
 
 /**
  * Renders a component inside the providers it needs at runtime. Retries are
@@ -18,9 +19,11 @@ export function renderWithProviders(ui: ReactElement, { route = '/' } = {}) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
-          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-        </ThemeProvider>
+        <SiteSettingsProvider>
+          <ThemeProvider theme={theme}>
+            <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+          </ThemeProvider>
+        </SiteSettingsProvider>
       </QueryClientProvider>
     );
   }

@@ -35,6 +35,21 @@ public class LocalFileSystemStorage implements StorageService {
         } catch (IOException e) {
             throw new IllegalStateException("Could not create the media directory at " + root, e);
         }
+
+        // Creating the root can succeed while writing into it cannot: a named
+        // volume keeps the ownership it was first populated with, so a volume
+        // seeded by a root container leaves this directory unwritable to the
+        // non-root user the application runs as. Left unchecked that surfaces
+        // much later, as a failed upload by an administrator who has no way to
+        // read the cause. Fail at boot instead, where the message is visible.
+        if (!Files.isWritable(root)) {
+            throw new IllegalStateException(
+                    "The media directory at " + root + " is not writable by this process (user "
+                            + System.getProperty("user.name") + "). Uploads would fail. If it is a "
+                            + "Docker volume, correct its ownership, e.g. "
+                            + "docker run --rm -u 0 -v <volume>:/m alpine chown -R 100:101 /m");
+        }
+
         log.info("Media directory: {}", root);
     }
 
@@ -50,6 +65,17 @@ public class LocalFileSystemStorage implements StorageService {
             throw new IllegalStateException("Could not store the uploaded file", e);
         }
         return key;
+    }
+
+    @Override
+    public void storeAt(String key, InputStream content) {
+        Path destination = resolveWithinRoot(key);
+        try {
+            Files.createDirectories(destination.getParent());
+            Files.copy(content, destination, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not store " + key, e);
+        }
     }
 
     @Override

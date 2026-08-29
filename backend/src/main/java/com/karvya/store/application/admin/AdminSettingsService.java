@@ -1,6 +1,7 @@
 package com.karvya.store.application.admin;
 
 import com.karvya.store.application.settings.SettingsService;
+import com.karvya.store.application.settings.ThemeFonts;
 import com.karvya.store.domain.ConflictException;
 import com.karvya.store.domain.NotFoundException;
 import com.karvya.store.domain.model.SettingType;
@@ -117,6 +118,9 @@ public class AdminSettingsService {
         return listAll();
     }
 
+    private static final java.util.regex.Pattern HEX_COLOUR =
+            java.util.regex.Pattern.compile("^#[0-9a-fA-F]{6}$");
+
     /** Validates and normalises one value against its declared type. */
     private String coerce(SiteSetting setting, String raw) {
         String value = (raw == null || raw.isBlank()) ? null : raw.trim();
@@ -165,6 +169,21 @@ public class AdminSettingsService {
             // drop anything that could run
             case HTML -> Jsoup.clean(value, RICH_TEXT);
             case JSON -> value;
+            case COLOUR -> {
+                String colour = value.startsWith("#") ? value : "#" + value;
+                if (!HEX_COLOUR.matcher(colour).matches()) {
+                    throw invalid(setting, "a colour such as #A33B2E");
+                }
+                // stored in one case so two spellings of the same colour do not
+                // read as a change in the admin form
+                yield colour.toUpperCase(java.util.Locale.ROOT);
+            }
+            case FONT -> {
+                if (!ThemeFonts.isAllowed(value)) {
+                    throw invalid(setting, "one of: " + String.join(", ", ThemeFonts.names()));
+                }
+                yield value;
+            }
             case STRING, TEXT -> Jsoup.clean(value, Safelist.none());
         };
     }

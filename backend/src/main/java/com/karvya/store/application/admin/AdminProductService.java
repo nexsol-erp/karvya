@@ -2,6 +2,8 @@ package com.karvya.store.application.admin;
 
 import com.karvya.store.application.admin.dto.AdminProductDtos;
 import com.karvya.store.application.common.PageResponse;
+import com.karvya.store.application.media.ImageRenditionService;
+import com.karvya.store.application.media.ImageRenditions;
 import com.karvya.store.application.media.ImageUploadValidator;
 import com.karvya.store.application.media.StorageService;
 import com.karvya.store.domain.ConflictException;
@@ -43,16 +45,19 @@ public class AdminProductService {
     private final OrderItemRepository orderItems;
     private final StorageService storage;
     private final ImageUploadValidator validator;
+    private final ImageRenditionService renditions;
 
     public AdminProductService(ProductRepository products, CategoryRepository categories,
                                ProductImageRepository images, OrderItemRepository orderItems,
-                               StorageService storage, ImageUploadValidator validator) {
+                               StorageService storage, ImageUploadValidator validator,
+                               ImageRenditionService renditions) {
         this.products = products;
         this.categories = categories;
         this.images = images;
         this.orderItems = orderItems;
         this.storage = storage;
         this.validator = validator;
+        this.renditions = renditions;
     }
 
     // ---- reading ----------------------------------------------------------
@@ -175,13 +180,16 @@ public class AdminProductService {
         // validated before a single byte reaches the disk
         ImageUploadValidator.ValidatedImage validated = validator.validate(file);
 
-        String key = storage.store("products/" + product.getSku().toLowerCase(Locale.ROOT),
-                validated.extension(), new ByteArrayInputStream(validated.bytes()));
+        // one file per width, not the original: the storefront asks for
+        // /media/{key}-{width}.jpg, so a single stored file would be requested
+        // at a URL that was never written
+        ImageRenditionService.Stored stored = renditions.store(
+                "products/" + product.getSku().toLowerCase(Locale.ROOT), validated.bytes());
 
-        ProductImage image = ProductImage.of(product, key,
+        ProductImage image = ProductImage.of(product, stored.baseKey(),
                 (altText == null || altText.isBlank()) ? product.getName() : altText.trim(),
                 validated.contentType(), validated.width(), validated.height(),
-                (long) validated.bytes().length);
+                (long) validated.bytes().length, stored.formats());
 
         // the first photograph leads the gallery unless told otherwise
         image.setDisplayOrder(product.getImages().size());
@@ -191,7 +199,7 @@ public class AdminProductService {
         product.setUpdatedBy(actor);
         products.saveAndFlush(product);
 
-        log.info("Added image {} to product {}", key, product.getSku());
+        log.info("Added image {} to product {}", stored.baseKey(), product.getSku());
         return AdminProductDtos.Detail.from(product);
     }
 
@@ -243,6 +251,7 @@ public class AdminProductService {
 
         boolean wasPrimary = image.isPrimary();
         String key = image.getStorageKey();
+        String formats = image.getFormats();
 
         product.getImages().remove(image);
         products.saveAndFlush(product);
@@ -253,8 +262,9 @@ public class AdminProductService {
             products.saveAndFlush(product);
         }
 
-        // the file goes only after the row is safely gone
-        storage.delete(key);
+        // the files go only after the row is safely gone, and every rendition
+        // goes - one row is backed by a width per format, not a single file
+        ImageRenditions.allKeys(key, formats).forEach(storage::delete);
         product.setUpdatedBy(actor);
 
         return AdminProductDtos.Detail.from(product);

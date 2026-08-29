@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
@@ -24,7 +24,7 @@ import { SEOHead } from '../components/common/SEOHead';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { formatMoney } from '../lib/format';
-import { config } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import { ApiError } from '../api/client';
 import { authKeys, listAddresses } from '../api/auth';
 import { getPaymentMethods, orderKeys, placeOrder } from '../api/orders';
@@ -44,6 +44,8 @@ const BLANK_FORM = {
 };
 
 export function Checkout() {
+  const settings = useSiteSettings();
+  const queryClient = useQueryClient();
   const { cart, isLoading: cartLoading } = useCart();
   const { isSignedIn, user } = useAuth();
   const navigate = useNavigate();
@@ -90,7 +92,7 @@ export function Checkout() {
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-  const money = (value: string | number) => formatMoney(value, cart.currency, config.locale);
+  const money = (value: string | number) => formatMoney(value, cart.currency, settings.locale);
   const usingSavedAddress = savedAddressId !== '';
   const selectedMethod = methods.data?.find((m) => m.code === paymentMethodCode);
 
@@ -114,6 +116,11 @@ export function Checkout() {
         deliveryEmail: form.deliveryEmail || undefined,
         paymentMethodCode,
       });
+
+      // the server keeps this delivery address against the account, so the
+      // cached list is now behind - without this the next checkout within the
+      // stale window would still ask for an address already saved
+      queryClient.invalidateQueries({ queryKey: authKeys.addresses });
 
       navigate(
         `/order/${placed.orderNumber}?token=${encodeURIComponent(placed.accessToken)}`,
@@ -433,9 +440,9 @@ export function Checkout() {
               </Stack>
 
               {/* required by the brief, and shown before the customer commits */}
+              {/* administrator-editable; falls back to the standard wording */}
               <Alert severity="info" sx={{ mt: 2.5 }}>
-                Your order will be confirmed by our team. Payment instructions will
-                be shared separately.
+                {settings.checkoutNotice}
               </Alert>
 
               <Button

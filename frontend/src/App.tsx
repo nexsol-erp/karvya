@@ -1,17 +1,19 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import LinearProgress from '@mui/material/LinearProgress';
 
-import { theme } from './theme';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { RequireAuth } from './components/common/RequireAuth';
 import { RequireAdmin } from './components/admin/RequireAdmin';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
+import { SiteSettingsProvider, useSiteSettings } from './hooks/useSiteSettings';
+import { buildTheme } from './theme';
+import { DEFAULT_BODY_FONT, DEFAULT_HEADING_FONT, googleFontsHref } from './theme/fonts';
 import { Landing } from './pages/Landing';
 
 // Split by route. The landing page ships in the entry chunk because it is
@@ -43,6 +45,12 @@ const AdminOrderDetail = lazy(() =>
 const AdminProducts = lazy(() =>
   import('./pages/admin/AdminProducts').then((m) => ({ default: m.AdminProducts })),
 );
+const AdminProductEdit = lazy(() =>
+  import('./pages/admin/AdminProductEdit').then((m) => ({ default: m.AdminProductEdit })),
+);
+const AdminAppearance = lazy(() =>
+  import('./pages/admin/AdminAppearance').then((m) => ({ default: m.AdminAppearance })),
+);
 const AdminEnquiries = lazy(() =>
   import('./pages/admin/AdminEnquiries').then((m) => ({ default: m.AdminEnquiries })),
 );
@@ -62,6 +70,43 @@ const ForgotPassword = lazy(() =>
 const ResetPassword = lazy(() =>
   import('./pages/ResetPassword').then((m) => ({ default: m.ResetPassword })),
 );
+
+/**
+ * Applies the appearance an administrator chose.
+ *
+ * <p>Inside the settings provider, because the theme is built from them, and a
+ * separate component so that a change of colour re-renders here rather than at
+ * the root. The built-in look is used until the settings arrive, so the first
+ * paint is the shop rather than an unstyled page.
+ */
+function Themed({ children }: { children: ReactNode }) {
+  const { appearance } = useSiteSettings();
+  const theme = useMemo(() => buildTheme(appearance), [appearance]);
+
+  const heading = appearance.fontHeading ?? DEFAULT_HEADING_FONT;
+  const body = appearance.fontBody ?? DEFAULT_BODY_FONT;
+
+  // The default pair is already linked in index.html. Anything else is added
+  // here, once, and removed if the choice changes again - otherwise every
+  // change would leave its stylesheet behind.
+  useEffect(() => {
+    const href = googleFontsHref(heading, body);
+    if (!href) return;
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+    return () => link.remove();
+  }, [heading, body]);
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {children}
+    </ThemeProvider>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,8 +138,8 @@ function ScrollToTop() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <SiteSettingsProvider>
+        <Themed>
         <AuthProvider>
         <CartProvider>
         <BrowserRouter>
@@ -134,8 +179,11 @@ export default function App() {
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="orders/:orderNumber" element={<AdminOrderDetail />} />
                   <Route path="products" element={<AdminProducts />} />
+                  <Route path="products/new" element={<AdminProductEdit />} />
+                  <Route path="products/:id" element={<AdminProductEdit />} />
                   <Route path="enquiries" element={<AdminEnquiries />} />
                   <Route path="customers" element={<AdminCustomers />} />
+                  <Route path="appearance" element={<AdminAppearance />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
               </Route>
@@ -144,7 +192,8 @@ export default function App() {
         </BrowserRouter>
         </CartProvider>
         </AuthProvider>
-      </ThemeProvider>
+        </Themed>
+      </SiteSettingsProvider>
     </QueryClientProvider>
   );
 }

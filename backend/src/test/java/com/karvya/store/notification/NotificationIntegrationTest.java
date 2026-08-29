@@ -44,6 +44,12 @@ class NotificationIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void resetSender() {
         emailSender.reset();
+
+        // Every drain here claims the whole outbox, so these tests are only
+        // meaningful starting from an empty one. Stated as an assertion rather
+        // than assumed: a leak shows up as this line failing, instead of as a
+        // count that is wrong by however many messages happened to be due.
+        assertThat(notifications.count()).isZero();
     }
 
     /** Runs one full pass: claim, send, record. */
@@ -134,12 +140,14 @@ class NotificationIntegrationTest extends AbstractIntegrationTest {
         transactionalMakeDue(orderNumber);
         emailSender.recover();
 
-        int sent = drainOutbox();
+        drainOutbox();
 
-        assertThat(sent).isEqualTo(2);
+        // asserted against this order rather than the drain's total: the outbox
+        // is shared, so a global count answers "what went out just now", not
+        // "did this order's mail go out"
         assertThat(notificationsFor(orderNumber))
+                .hasSize(2)
                 .allMatch(n -> n.getStatus() == NotificationStatus.SENT);
-        assertThat(emailSender.sent()).hasSize(2);
     }
 
     // ---- retry policy -----------------------------------------------------

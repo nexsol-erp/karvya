@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { config, whatsAppEnabled } from '../../config';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { whatsAppLink } from '../../lib/format';
 
 /**
@@ -17,6 +17,7 @@ import { whatsAppLink } from '../../lib/format';
  * not true.
  */
 export function Footer() {
+  const settings = useSiteSettings();
   const year = new Date().getFullYear();
 
   return (
@@ -39,9 +40,9 @@ export function Footer() {
                 mb: 1,
               }}
             >
-              {config.storeName}
+              {settings.storeName}
             </Typography>
-            <Typography variant="body2">{config.tagline}</Typography>
+            <Typography variant="body2">{settings.tagline}</Typography>
           </Box>
 
           <Stack spacing={1.25}>
@@ -63,18 +64,18 @@ export function Footer() {
             <Typography variant="overline" color="text.secondary">
               Get in touch
             </Typography>
-            {config.contactEmail ? (
-              <Link href={`mailto:${config.contactEmail}`} color="text.primary">
-                {config.contactEmail}
+            {settings.contactEmail ? (
+              <Link href={`mailto:${settings.contactEmail}`} color="text.primary">
+                {settings.contactEmail}
               </Link>
             ) : (
               <Typography variant="body2" color="text.disabled">
                 Email address not yet configured
               </Typography>
             )}
-            {whatsAppEnabled() ? (
+            {settings.whatsAppEnabled ? (
               <Link
-                href={whatsAppLink(config.whatsAppNumber, `Hello ${config.storeName}, I have a question.`)}
+                href={whatsAppLink(settings.whatsAppNumber, `Hello ${settings.storeName}, I have a question.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 color="text.primary"
@@ -90,7 +91,7 @@ export function Footer() {
         </Stack>
 
         <Typography variant="body2" sx={{ mt: 6, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-          © {year} {config.storeName}. All rights reserved.
+          © {year} {settings.storeName}. All rights reserved.
         </Typography>
       </Container>
     </Box>

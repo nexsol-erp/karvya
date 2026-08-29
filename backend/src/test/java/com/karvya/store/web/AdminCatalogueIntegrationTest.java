@@ -42,6 +42,7 @@ class AdminCatalogueIntegrationTest extends AbstractIntegrationTest {
     @Autowired private ProductRepository products;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private TransactionTemplate transactionTemplate;
+    @Autowired private com.karvya.store.application.media.StorageService storage;
 
     private static final String PASSWORD = "an-admin-password-1";
     private String adminEmail;
@@ -224,11 +225,17 @@ class AdminCatalogueIntegrationTest extends AbstractIntegrationTest {
         MvcResult withImages = mockMvc.perform(get("/api/v1/admin/products/" + id).cookie(admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.images.length()").value(2))
-                // the client never chooses the filename
+                // the client never chooses the filename, and the key names a
+                // base rather than a file - the renditions hang off it
                 .andExpect(jsonPath("$.images[0].storageKey")
-                        .value(org.hamcrest.Matchers.matchesRegex("products/kv-img-01/[0-9a-f-]{36}\\.png")))
+                        .value(org.hamcrest.Matchers.matchesRegex("products/kv-img-01/[0-9a-f-]{36}")))
                 .andExpect(jsonPath("$.images[0].primary").value(true))
                 .andExpect(jsonPath("$.images[0].width").value(600))
+                // JPEG only: the application has no AVIF or WebP encoder, and
+                // claiming otherwise would have the storefront ask for files
+                // that were never written
+                .andExpect(jsonPath("$.images[0].formats.length()").value(1))
+                .andExpect(jsonPath("$.images[0].formats[0]").value("jpg"))
                 .andReturn();
 
         var images = objectMapper.readTree(withImages.getResponse().getContentAsString()).get("images");
@@ -245,6 +252,50 @@ class AdminCatalogueIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.images[0].id").value(second))
                 .andExpect(jsonPath("$.images[0].primary").value(true))
                 .andExpect(jsonPath("$.images[1].primary").value(false));
+    }
+
+    @Test
+    @DisplayName("an uploaded photograph is written at every width the storefront asks for")
+    void writesEveryRendition() throws Exception {
+        Cookie[] admin = adminSession();
+
+        MvcResult created = mockMvc.perform(post("/api/v1/admin/products").cookie(admin).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(productBody("KV-IMG-02", "Rendition Test Piece"))))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        MvcResult uploaded = mockMvc.perform(multipart("/api/v1/admin/products/" + id + "/images")
+                        .file(new MockMultipartFile("file", "shot.png", "image/png", realPng(1200, 900)))
+                        .cookie(admin).with(csrf()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        var image = objectMapper.readTree(uploaded.getResponse().getContentAsString())
+                .get("images").get(0);
+        String key = image.get("storageKey").asText();
+
+        // The storefront composes /media/{key}-{width}.jpg and a missing file
+        // is a broken image, not a fallback - so every width in the srcset has
+        // to exist, including ones wider than the original.
+        for (int width : com.karvya.store.application.media.ImageRenditions.WIDTHS) {
+            assertThat(storage.exists(key + "-" + width + ".jpg"))
+                    .as("rendition at %d px", width)
+                    .isTrue();
+        }
+
+        // deleting the photograph takes its files with it
+        long imageId = image.get("id").asLong();
+        mockMvc.perform(delete("/api/v1/admin/products/" + id + "/images/" + imageId)
+                        .cookie(admin).with(csrf()))
+                .andExpect(status().isOk());
+
+        for (int width : com.karvya.store.application.media.ImageRenditions.WIDTHS) {
+            assertThat(storage.exists(key + "-" + width + ".jpg"))
+                    .as("rendition at %d px after delete", width)
+                    .isFalse();
+        }
     }
 
     @Test

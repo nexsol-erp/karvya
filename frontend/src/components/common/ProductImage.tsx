@@ -24,14 +24,28 @@ function srcSet(key: string, extension: string): string {
   return WIDTHS.map((w) => `/media/${key}-${w}.${extension} ${w}w`).join(', ');
 }
 
+/** Everything but the JPEG, which is the <img> fallback rather than a source. */
+const SOURCE_TYPES: Record<string, string> = {
+  avif: 'image/avif',
+  webp: 'image/webp',
+};
+
 /**
- * Renders one product photograph across AVIF, WebP and JPEG.
+ * Renders one product photograph across the renditions that exist for it.
  *
  * <p>The browser takes the first source type it understands, so ordering is
  * the compression ranking: AVIF, then WebP, then a JPEG that any browser can
- * read. Intrinsic width and height are always set - without them the page
- * reflows as each image arrives, which is the single largest contributor to a
- * poor layout-shift score on an image-led catalogue.
+ * read.
+ *
+ * <p>Only the formats the server says were written are offered. A browser
+ * chooses a source on its type alone and does not check the file is there, so
+ * offering AVIF for a photograph that only has JPEG shows a broken image
+ * instead of falling through - and admin uploads are resized in the
+ * application, which has JPEG only.
+ *
+ * <p>Intrinsic width and height are always set - without them the page reflows
+ * as each image arrives, which is the single largest contributor to a poor
+ * layout-shift score on an image-led catalogue.
  */
 export function ProductImage({ image, sizes, priority = false, aspectRatio, sx }: Props) {
   if (!image) {
@@ -59,8 +73,16 @@ export function ProductImage({ image, sizes, priority = false, aspectRatio, sx }
       component="picture"
       sx={{ display: 'block', lineHeight: 0, ...sx }}
     >
-      <source type="image/avif" srcSet={srcSet(image.key, 'avif')} sizes={sizes} />
-      <source type="image/webp" srcSet={srcSet(image.key, 'webp')} sizes={sizes} />
+      {(image.formats ?? ['jpg'])
+        .filter((format) => format in SOURCE_TYPES)
+        .map((format) => (
+          <source
+            key={format}
+            type={SOURCE_TYPES[format]}
+            srcSet={srcSet(image.key, format)}
+            sizes={sizes}
+          />
+        ))}
       <Box
         component="img"
         src={`/media/${image.key}-800.jpg`}

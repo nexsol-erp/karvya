@@ -23,7 +23,7 @@ import { ApiError } from '../api/client';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { formatMoney, whatsAppLink } from '../lib/format';
-import { config, whatsAppEnabled } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import {
   ORDER_STATUS_LABELS,
   PAYMENT_STATUS_LABELS,
@@ -40,6 +40,7 @@ import {
  * on this page, so there is one thing to maintain.
  */
 export function OrderConfirmation() {
+  const settings = useSiteSettings();
   const { orderNumber = '' } = useParams();
   const [params] = useSearchParams();
   const token = params.get('token');
@@ -96,10 +97,10 @@ export function OrderConfirmation() {
   }
 
   const o = order.data;
-  const money = (value: string | number) => formatMoney(value, o.currency, config.locale);
+  const money = (value: string | number) => formatMoney(value, o.currency, settings.locale);
 
   const whatsAppSummary = [
-    `Hello ${config.storeName}, about my order ${o.orderNumber}:`,
+    `Hello ${settings.storeName}, about my order ${o.orderNumber}:`,
     '',
     ...o.lines.map((line) => `- ${line.productName} x${line.quantity}`),
     '',
@@ -130,8 +131,7 @@ export function OrderConfirmation() {
 
       <Alert severity="info" sx={{ mb: 3 }}>
         <AlertTitle>What happens next</AlertTitle>
-        Your order will be confirmed by our team. Payment instructions will be
-        shared separately.
+        {settings.checkoutNotice}
       </Alert>
 
       {o.paymentInstructions && (
@@ -234,10 +234,10 @@ export function OrderConfirmation() {
               Paying by <strong>{o.paymentMethodLabel}</strong>
             </Typography>
 
-            {whatsAppEnabled() && (
+            {settings.whatsAppEnabled && (
               <Button
                 component="a"
-                href={whatsAppLink(config.whatsAppNumber, whatsAppSummary)}
+                href={whatsAppLink(settings.whatsAppNumber, whatsAppSummary)}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="outlined"
