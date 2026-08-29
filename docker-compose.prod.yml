@@ -1,0 +1,49 @@
+# Production overlay: TLS in front, and nothing else on a public port.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Requires SITE_DOMAIN and ACME_EMAIL in .env, and a DNS A record for that
+# domain pointing at this instance before the first start - Caddy proves it
+# controls the name over port 80, so a certificate cannot be issued until the
+# record resolves here.
+
+services:
+  web:
+    # Caddy takes 80 and 443; nginx is reachable only on the compose network.
+    # That is what makes it safe for nginx to trust the X-Forwarded-Proto it is
+    # given - nothing outside can set it.
+    #
+    # !override rather than an empty list: Compose merges list values, so
+    # without it the base file's "80:80" would survive and collide with Caddy.
+    ports: !override []
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      # HTTP/3. Harmless if the security group does not allow UDP; the browser
+      # simply stays on TCP.
+      - "443:443/udp"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in .env, e.g. shop.example.com}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Holds the issued certificates and the ACME account key. Losing it means
+      # re-issuing on next start, which counts against the rate limit.
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80", "--spider"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -216,6 +216,148 @@ is a hypothesis. Restore into a scratch database, sign in, and open an order.
 
 ---
 
+## Deploying to EC2
+
+Caddy terminates TLS in front of the stack, PostgreSQL runs in Docker beside
+it, and a push to `main` deploys once CI is green.
+
+### 1. The instance
+
+A `t3.small` on Ubuntu 24.04 is enough: the backend, PostgreSQL, nginx and
+Caddy together sit comfortably under 2 GB, and the Maven build during a deploy
+is the heaviest thing that happens. `t3.micro` will build very slowly and can
+run out of memory doing it. Give it 30 GB of gp3 — images and their layers
+accumulate faster than the data does.
+
+Attach an **Elastic IP**. Without one the address changes on every stop/start
+and the DNS record — which the certificate depends on — silently goes stale.
+
+Security group inbound:
+
+| Port | Source | Why |
+|---|---|---|
+| 22 | your address only | SSH. Not `0.0.0.0/0`. |
+| 80 | `0.0.0.0/0` | Caddy needs it to prove domain control, and to redirect to https. |
+| 443 | `0.0.0.0/0` | The site. Add UDP 443 too if you want HTTP/3. |
+
+Nothing else. PostgreSQL and the backend are reachable only on the Docker
+network — do not open 5432 or 8080.
+
+### 2. Point the domain at it
+
+An `A` record for `SITE_DOMAIN` to the Elastic IP, **before** the first start.
+Caddy asks Let's Encrypt for a certificate on startup and proves it controls
+the name over port 80; if the record does not resolve yet, issuance fails.
+Real certificates are rate limited to five per domain per week, so while you
+are still sorting DNS out, uncomment `acme_ca` in `caddy/Caddyfile` to use the
+staging CA — the browser will warn about the certificate, which is the point.
+
+### 3. Prepare the box
+
+```bash
+ssh -i karvyapem.pem ubuntu@<elastic-ip>
+
+sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
+sudo systemctl enable --now docker
+
+sudo mkdir -p /opt/karvya && sudo chown "$USER":"$USER" /opt/karvya
+git clone https://github.com/nexsol-erp/karvya.git /opt/karvya
+cd /opt/karvya
+
+sudo usermod -aG docker "$USER" && newgrp docker
+```
+
+Cloning over HTTPS keeps a deploy key off the instance. A private repository
+needs one — generate it on the instance, add the public half to the repository
+as a read-only deploy key, and clone over SSH instead.
+
+### 4. Fill in `.env`
+
+```bash
+cp .env.example .env && nano .env
+```
+
+The ones that matter, and what goes wrong if they are not right:
+
+| Variable | Set it to |
+|---|---|
+| `SITE_DOMAIN` | `shop.example.com`. Caddy requests the certificate for exactly this name. |
+| `ACME_EMAIL` | A real address. Let's Encrypt writes here if renewal breaks. |
+| `APP_BASE_URL` | `https://shop.example.com`. Every link in every email is built from it — a wrong value sends customers to the wrong host, and nothing in the app will notice. |
+| `POSTGRES_PASSWORD` | Something generated. `openssl rand -base64 24`. |
+| `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD` | The first administrator, created on first boot **only**. Leave the password unset and no account is created. |
+| `SPRING_PROFILES_ACTIVE` | `prod`. |
+| `APP_COOKIE_SECURE` | `true`. Leave it true — it is only `false` for the HTTP-only CI harness. |
+| `MAIL_*` | Real SMTP. Without it orders are placed and confirmations queue up undelivered; the dashboard reports the failures. |
+
+`.env` is gitignored and stays only on the instance. Nothing reads it from the
+repository.
+
+### 5. First start
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose logs -f caddy    # watch the certificate being issued
+```
+
+Then check `https://shop.example.com` and sign in at `/admin/login`.
+
+### 6. Deploy on push
+
+The `Deploy` workflow runs after CI succeeds on `main`. Add three repository
+secrets under **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+|---|---|
+| `EC2_HOST` | The Elastic IP or hostname. |
+| `EC2_USER` | `ubuntu`. |
+| `EC2_SSH_KEY` | A private key **for deployment only**, not your personal one. |
+| `EC2_KNOWN_HOSTS` | Output of `ssh-keyscan <elastic-ip>`. |
+
+Generate a deployment key rather than reusing `karvyapem.pem`:
+
+```bash
+ssh-keygen -t ed25519 -f karvya-deploy -C "github-actions"
+ssh-copy-id -i karvya-deploy.pub ubuntu@<elastic-ip>
+```
+
+`EC2_KNOWN_HOSTS` is not optional. Without a pinned host key the workflow would
+accept whatever answers on that address, while handing it a key that can deploy.
+
+Also add port 22 access for GitHub's runners — their addresses are not fixed,
+so either allow `0.0.0.0/0` on 22 with password authentication disabled, or run
+a self-hosted runner inside the VPC.
+
+### 7. Back up the database
+
+The instance is disposable; the orders on it are not.
+
+```bash
+sudo mkdir -p /var/backups/karvya && sudo chown "$USER":"$USER" /var/backups/karvya
+crontab -e
+# 15 2 * * * /opt/karvya/scripts/backup-db.sh >> /var/log/karvya-backup.log 2>&1
+```
+
+Set `S3_BUCKET` in `.env` and attach an instance role with `s3:PutObject` to
+copy each dump off the box. A backup that only exists on the instance protects
+you from a bad migration but not from losing the instance.
+
+`karvya_media_data` holds the product photographs and is not covered by the
+dump. Snapshot the EBS volume, or sync it to S3 on the same schedule.
+
+### What this deployment does not do
+
+**It does not roll back.** Compose replaces the containers before the health
+check runs, so a broken revision is the one left running and the site is down
+until someone acts. The deploy log prints the previous commit and the command
+to return to it. Automatic rollback needs two stacks and a switch in front of
+them.
+
+**There is one instance.** A deploy is a short outage while containers restart,
+and rate limiting is in-process so it cannot be scaled out as-is.
+
+---
+
 ## Deploying to a Linux server
 
 ```bash

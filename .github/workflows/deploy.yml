@@ -1,0 +1,73 @@
+# Deploys to EC2 after CI passes on main.
+#
+# Triggered by CI completing rather than by the push itself, so a commit that
+# fails its tests never reaches the server. The manual trigger is there for
+# redeploying the current main without pushing anything - after an .env change,
+# for instance.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time. Two overlapping runs would fight over the same
+# containers, and the later one should win rather than be queued behind a
+# revision nobody wants any more.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    # workflow_run fires whatever the outcome, including failure, so the result
+    # has to be checked explicitly. workflow_dispatch has no source run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    environment: production
+
+    steps:
+      - name: Open an SSH session
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SSH_HOST: ${{ secrets.EC2_HOST }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Pinned host key rather than StrictHostKeyChecking=no: without it the
+          # first connection would accept whatever answers on that address, and
+          # this session hands over a key that can deploy.
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          SSH_HOST: ${{ secrets.EC2_HOST }}
+          SSH_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes \
+              "$SSH_USER@$SSH_HOST" \
+              'APP_DIR=/opt/karvya /opt/karvya/scripts/deploy.sh'
+
+      - name: Report
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "Deployed ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "**Deploy failed, and the site may be down.**"
+              echo
+              echo "Containers are replaced before the health check runs, so a"
+              echo "failure leaves the new revision running rather than rolling"
+              echo "back on its own. The deploy log prints the previous commit"
+              echo "and the command to return to it."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
