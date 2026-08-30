@@ -92,7 +92,10 @@ test.describe('guest checkout', () => {
   test('a visitor can browse, add to cart, order, and the team sees it', async ({ page }) => {
     // ---- browse ----
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /handwoven coir bird houses/i })).toBeVisible();
+    // the hero copy is a setting now, so this checks the page leads with
+    // something rather than with one particular shop's wording
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('');
 
     await page.getByRole('link', { name: 'Shop', exact: true }).first().click();
     await expect(page).toHaveURL(/\/shop/);

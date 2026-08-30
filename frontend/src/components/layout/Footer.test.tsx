@@ -68,6 +68,27 @@ describe('Footer policy links', () => {
   });
 });
 
+describe('Footer address', () => {
+  beforeEach(() => useSiteSettings.mockReset());
+
+  it('shows the address with its line breaks intact', () => {
+    given({ businessAddress: '12 Weavers Lane\nAlappuzha\nKerala 688001' });
+    renderWithProviders(<Footer />);
+
+    const address = screen.getByText(/12 Weavers Lane/);
+    expect(address).toBeInTheDocument();
+    // an address written over several lines should not be collapsed into one
+    expect(address).toHaveStyle({ whiteSpace: 'pre-line' });
+  });
+
+  it('shows nothing when no address is configured', () => {
+    given({});
+    renderWithProviders(<Footer />);
+
+    expect(screen.queryByText(/Weavers Lane/)).toBeNull();
+  });
+});
+
 describe('Footer social links', () => {
   beforeEach(() => useSiteSettings.mockReset());
 

@@ -139,6 +139,14 @@ export function Footer() {
                 WhatsApp number not yet configured
               </Typography>
             )}
+
+            {isWritten(settings.businessAddress) && (
+              // whitespace kept: an address is written over several lines and
+              // collapsing it into one is not how anyone reads or copies it
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mt: 0.5 }}>
+                {settings.businessAddress}
+              </Typography>
+            )}
           </Stack>
 
           <Stack spacing={1.25}>

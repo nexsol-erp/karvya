@@ -8,7 +8,6 @@ import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Divider from '@mui/material/Divider';
-import Chip from '@mui/material/Chip';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -250,7 +249,9 @@ export function AdminHelp() {
                 <strong>contact.whatsapp_number</strong> drives every WhatsApp link; empty hides
                 them all. <strong>contact.public_email</strong> is shown to customers.{' '}
                 <strong>contact.admin_email</strong> is where order and enquiry alerts go, and
-                overrides the address in the server's environment.
+                overrides the address in the server's environment.{' '}
+                <strong>contact.address</strong> appears in the footer, with its line breaks
+                kept — write it as you would on an envelope.
               </Setting>
               <Setting name="mail.*" to="/admin/settings#mail">
                 SMTP. Fill in host, port, username and password, then use{' '}
@@ -283,8 +284,10 @@ export function AdminHelp() {
               <Setting name="content.*" to="/admin/settings#content">
                 <strong>content.checkout_notice</strong> appears at checkout and on the
                 confirmation. <strong>story_body</strong>, <strong>why_handmade_body</strong> and{' '}
-                <strong>materials_body</strong> are the Our Story page. The two{' '}
-                <strong>hero_*</strong> settings are not read by any page yet.
+                <strong>materials_body</strong> are the Our Story page.{' '}
+                <strong>content.hero_heading</strong> is the first line on the home page —
+                empty falls back to the shop name — and <strong>hero_subheading</strong> is
+                the sentence under it, which is also the description search engines show.
               </Setting>
               <Setting name="theme.*" to="/admin/appearance">
                 Edited on <strong>Appearance</strong> rather than here, where a preview and the
@@ -293,36 +296,6 @@ export function AdminHelp() {
             </TableBody>
           </Table>
         </Section>
-
-        {/* ---- the honest part ---- */}
-        <Card sx={{ p: { xs: 2, md: 2.75 } }}>
-          <Typography variant="h6" component="h2" sx={{ fontSize: '1.05rem', mb: 0.5 }}>
-            Settings that do not do anything yet
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 1.75 }}>
-            These are editable, and nothing reads them. They are listed here so you do not spend
-            an afternoon writing copy no customer can reach. Each says the same in its own
-            description.
-          </Typography>
-          <Divider sx={{ mb: 1.75 }} />
-
-          <Stack spacing={1} sx={{ mb: 1.5 }}>
-            <Typography variant="body2">
-              <Chip size="small" label="contact.address" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              <Chip size="small" label="content.hero_heading" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              <Chip size="small" label="content.hero_subheading" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace' }} />
-              {' '}— no page reads these.
-            </Typography>
-            <Typography variant="body2">
-              <Chip size="small" label="store.logo_key" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              — there is no logo upload; the shop name is used as a wordmark.
-            </Typography>
-          </Stack>
-        </Card>
 
         {/* ---- things not in this screen at all ---- */}
         <Card sx={{ p: { xs: 2, md: 2.75 } }}>

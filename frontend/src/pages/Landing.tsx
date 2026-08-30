@@ -16,6 +16,7 @@ import { ProductImage } from '../components/common/ProductImage';
 import { SEOHead } from '../components/common/SEOHead';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 import { whatsAppLink } from '../lib/format';
+import { isWritten } from '../lib/copy';
 import { palette } from '../theme';
 
 const FEATURED_QUERY = { featured: true, size: 8, sort: 'RELEVANCE' } as const;
@@ -30,6 +31,13 @@ const FEATURED_QUERY = { featured: true, size: 8, sort: 'RELEVANCE' } as const;
  */
 export function Landing() {
   const settings = useSiteSettings();
+
+  // Falls back to the shop's own name rather than to a description of what it
+  // sells. Anything more specific would be a guess - this shop sells whatever
+  // an administrator put in it - and a wrong guess on the first line of the
+  // first page is the worst place to have one.
+  const heroHeading = isWritten(settings.heroHeading) ? settings.heroHeading : settings.storeName;
+  const heroSubheading = settings.heroSubheading;
   const featured = useQuery({
     queryKey: catalogKeys.products(FEATURED_QUERY),
     queryFn: () => searchProducts(FEATURED_QUERY),
@@ -47,7 +55,13 @@ export function Landing() {
     <>
       <SEOHead
         title={settings.storeName}
-        description="Handwoven coir bird houses and nesting shelters, each piece shaped by hand from natural coconut fibre."
+        // the same words the page leads with, rather than a second description
+        // to keep in step with it
+        description={
+          isWritten(heroSubheading)
+            ? heroSubheading
+            : `${heroHeading}${isWritten(settings.tagline) ? ` — ${settings.tagline}` : ''}`
+        }
         path="/"
         imageKey={hero?.image?.key ?? null}
       />
@@ -58,19 +72,21 @@ export function Landing() {
           <Grid container spacing={{ xs: 4, md: 8 }} sx={{ alignItems: 'center' }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Stack spacing={3}>
-                <Typography variant="overline" color="primary">
-                  Handmade natural fibre
-                </Typography>
+                {isWritten(settings.tagline) && (
+                  <Typography variant="overline" color="primary">
+                    {settings.tagline}
+                  </Typography>
+                )}
 
                 <Typography variant="h1" sx={{ fontSize: { xs: '2.5rem', sm: '3.2rem', md: '3.9rem' } }}>
-                  Handwoven coir bird houses
+                  {heroHeading}
                 </Typography>
 
-                <Typography sx={{ fontSize: { xs: '1.05rem', md: '1.15rem' }, maxWidth: '46ch' }}>
-                  Each piece is wound by hand from natural coconut fibre, shaped
-                  over a form, and finished with a cord to hang it by. No two
-                  come out quite the same.
-                </Typography>
+                {isWritten(heroSubheading) && (
+                  <Typography sx={{ fontSize: { xs: '1.05rem', md: '1.15rem' }, maxWidth: '46ch' }}>
+                    {heroSubheading}
+                  </Typography>
+                )}
 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ pt: 1 }}>
                   <Button

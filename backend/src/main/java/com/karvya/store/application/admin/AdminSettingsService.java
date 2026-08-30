@@ -13,6 +13,7 @@ import com.karvya.store.domain.repository.SiteSettingRepository;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.safety.Safelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -255,7 +256,14 @@ public class AdminSettingsService {
             // stored verbatim: an API key is not markup and must not be
             // altered on the way in
             case SECRET -> value;
-            case STRING, TEXT -> Jsoup.clean(value, Safelist.none());
+            // Markup removed, line breaks kept. jsoup tidies whitespace by
+            // default, which turned a postal address into one long line and
+            // collapsed the blank line between two paragraphs of story copy -
+            // so the setting could be typed over several lines and never stored
+            // that way. prettyPrint(false) is what leaves the text as written.
+            case STRING, TEXT -> Jsoup.clean(
+                    value, "", Safelist.none(),
+                    new Document.OutputSettings().prettyPrint(false));
         };
     }
 
