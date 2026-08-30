@@ -40,6 +40,11 @@ export interface SiteSettings {
   facebook: string;
   youtube: string;
 
+  /** Rich text, cleaned by the server on save and again on read. */
+  shippingPolicy: string;
+  returnsPolicy: string;
+  privacyPolicy: string;
+
   /** Appearance, as the theme needs it. Nulls mean "use the built-in default". */
   appearance: ThemeOverrides;
 
@@ -104,6 +109,10 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
       instagram: text(s.instagram),
       facebook: text(s.facebook),
       youtube: text(s.youtube),
+
+      shippingPolicy: text(s.shippingPolicy),
+      returnsPolicy: text(s.returnsPolicy),
+      privacyPolicy: text(s.privacyPolicy),
 
       appearance: {
         colourPrimary: s.colourPrimary ?? null,

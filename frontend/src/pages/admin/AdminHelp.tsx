@@ -258,6 +258,12 @@ export function AdminHelp() {
                 shoppers by design, so that button is the only way to know it works. The
                 password is never shown again once saved; leaving it blank keeps it.
               </Setting>
+              <Setting name="policy.*" to="/admin/settings#policy">
+                Delivery, returns and privacy, shown at <em>/shipping</em>, <em>/returns</em> and{' '}
+                <em>/privacy</em>. These accept formatting — paragraphs, lists, links — and the
+                footer links each one once it has been written. Left empty, the page says it is
+                not published and nothing links to it.
+              </Setting>
               <Setting name="social.*" to="/admin/settings#social">
                 Instagram, Facebook and YouTube. Paste the full address of each —{' '}
                 <em>https://instagram.com/yourshop</em>, not a handle — and the icon appears in
@@ -301,15 +307,6 @@ export function AdminHelp() {
           <Divider sx={{ mb: 1.75 }} />
 
           <Stack spacing={1} sx={{ mb: 1.5 }}>
-            <Typography variant="body2">
-              <Chip size="small" label="policy.shipping" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              <Chip size="small" label="policy.returns" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              <Chip size="small" label="policy.privacy" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace' }} />
-              {' '}— there are no policy pages on the shop.
-            </Typography>
             <Typography variant="body2">
               <Chip size="small" label="contact.address" variant="outlined"
                     sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />

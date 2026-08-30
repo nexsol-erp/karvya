@@ -79,6 +79,7 @@ const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m
 const ForgotPassword = lazy(() =>
   import('./pages/ForgotPassword').then((m) => ({ default: m.ForgotPassword })),
 );
+const Policy = lazy(() => import('./pages/Policy').then((m) => ({ default: m.Policy })));
 const ResetPassword = lazy(() =>
   import('./pages/ResetPassword').then((m) => ({ default: m.ResetPassword })),
 );
@@ -165,6 +166,9 @@ export default function App() {
                 <Route path="product/:slug" element={<ProductDetail />} />
                 <Route path="our-story" element={<OurStory />} />
                 <Route path="contact" element={<Contact />} />
+                <Route path="shipping" element={<Policy kind="shipping" />} />
+                <Route path="returns" element={<Policy kind="returns" />} />
+                <Route path="privacy" element={<Policy kind="privacy" />} />
                 <Route path="cart" element={<Cart />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="order/:orderNumber" element={<OrderConfirmation />} />

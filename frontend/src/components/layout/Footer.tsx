@@ -11,6 +11,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { whatsAppLink } from '../../lib/format';
+import { isWritten } from '../../lib/copy';
 
 /**
  * Site footer.
@@ -52,6 +53,15 @@ function isWebAddress(value: string): boolean {
 
 export function Footer() {
   const settings = useSiteSettings();
+
+  // Only the policies that have been written. Each page exists either way, so
+  // an address already shared keeps working - but there is no reason to send
+  // anyone from here to a page that says nothing yet.
+  const policies = [
+    { to: '/shipping', label: 'Delivery', body: settings.shippingPolicy },
+    { to: '/returns', label: 'Returns', body: settings.returnsPolicy },
+    { to: '/privacy', label: 'Privacy', body: settings.privacyPolicy },
+  ].filter((policy) => isWritten(policy.body));
 
   // resolved once: only the networks that have a usable address
   const social = SOCIAL.map(({ key, label, Icon }) => ({
@@ -127,6 +137,23 @@ export function Footer() {
             ) : (
               <Typography variant="body2" color="text.disabled">
                 WhatsApp number not yet configured
+              </Typography>
+            )}
+          </Stack>
+
+          <Stack spacing={1.25}>
+            <Typography variant="overline" color="text.secondary">
+              Policies
+            </Typography>
+            {policies.length > 0 ? (
+              policies.map(({ to, label }) => (
+                <Link key={to} component={RouterLink} to={to} color="text.primary">
+                  {label}
+                </Link>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.disabled">
+                None published yet
               </Typography>
             )}
           </Stack>

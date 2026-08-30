@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { Contact } from './Contact';
@@ -33,16 +33,27 @@ const settings = {
   instagram: '',
   facebook: '',
   youtube: '',
+  shippingPolicy: '',
+  returnsPolicy: '',
+  privacyPolicy: '',
   appearance: {},
   whatsAppEnabled: false,
   isLoading: false,
 };
 
-async function fillIn() {
-  await userEvent.type(screen.getByLabelText(/your name/i), 'Asha Menon');
-  await userEvent.type(screen.getByLabelText(/email address/i), 'asha@example.com');
-  await userEvent.type(screen.getByLabelText(/^subject/i), 'A question');
-  await userEvent.type(screen.getByLabelText(/^message/i), 'Do you ship to Kochi?');
+/**
+ * Filled with one change event per field rather than a keystroke at a time.
+ * Nothing here is testing what typing does - that is NumberField's job - and
+ * typing every character makes these slow enough to time out on a busy machine.
+ */
+function fillIn() {
+  const type = (label: RegExp, value: string) =>
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+
+  type(/your name/i, 'Asha Menon');
+  type(/email address/i, 'asha@example.com');
+  type(/^subject/i, 'A question');
+  type(/^message/i, 'Do you ship to Kochi?');
 }
 
 describe('Contact form', () => {
@@ -55,7 +66,7 @@ describe('Contact form', () => {
     submitEnquiry.mockResolvedValue(undefined);
     renderWithProviders(<Contact />);
 
-    await fillIn();
+    fillIn();
     await userEvent.click(screen.getByRole('button', { name: /send message/i }));
 
     expect(submitEnquiry).toHaveBeenCalledWith(
@@ -74,7 +85,7 @@ describe('Contact form', () => {
     submitEnquiry.mockResolvedValue(undefined);
     renderWithProviders(<Contact />);
 
-    await fillIn();
+    fillIn();
     await userEvent.click(screen.getByRole('button', { name: /send message/i }));
 
     expect(submitEnquiry).toHaveBeenCalledWith(expect.objectContaining({ website: '' }));
@@ -86,7 +97,7 @@ describe('Contact form', () => {
     );
     renderWithProviders(<Contact />);
 
-    await fillIn();
+    fillIn();
     await userEvent.click(screen.getByRole('button', { name: /send message/i }));
 
     expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument();
@@ -101,7 +112,7 @@ describe('Contact form', () => {
     submitEnquiry.mockRejectedValue(new ApiError(429, null, 'too many'));
     renderWithProviders(<Contact />);
 
-    await fillIn();
+    fillIn();
     await userEvent.click(screen.getByRole('button', { name: /send message/i }));
 
     expect(await screen.findByText(/several messages in a short time/i)).toBeInTheDocument();
@@ -111,7 +122,7 @@ describe('Contact form', () => {
     submitEnquiry.mockRejectedValue(new ApiError(500, null, 'boom'));
     renderWithProviders(<Contact />);
 
-    await fillIn();
+    fillIn();
     await userEvent.click(screen.getByRole('button', { name: /send message/i }));
 
     expect(await screen.findByText(/could not be sent just now/i)).toBeInTheDocument();

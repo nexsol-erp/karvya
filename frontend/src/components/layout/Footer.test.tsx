@@ -29,6 +29,9 @@ const base: SiteSettings = {
   instagram: '',
   facebook: '',
   youtube: '',
+  shippingPolicy: '',
+  returnsPolicy: '',
+  privacyPolicy: '',
   appearance: {},
   whatsAppEnabled: false,
   isLoading: false,
@@ -36,6 +39,34 @@ const base: SiteSettings = {
 
 const given = (overrides: Partial<SiteSettings>) =>
   useSiteSettings.mockReturnValue({ ...base, ...overrides });
+
+describe('Footer policy links', () => {
+  beforeEach(() => useSiteSettings.mockReset());
+
+  it('links only the policies that have been written', () => {
+    given({ returnsPolicy: '<p>No returns.</p>', privacyPolicy: '' });
+    renderWithProviders(<Footer />);
+
+    expect(screen.getByRole('link', { name: 'Returns' })).toHaveAttribute('href', '/returns');
+    expect(screen.queryByRole('link', { name: 'Privacy' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Delivery' })).toBeNull();
+  });
+
+  it('says none are published rather than showing an empty column', () => {
+    given({});
+    renderWithProviders(<Footer />);
+
+    expect(screen.getByText(/none published yet/i)).toBeInTheDocument();
+  });
+
+  /** Seeded copy is a note to the owner, not a policy to link a shopper to. */
+  it('does not link a policy that is still placeholder copy', () => {
+    given({ shippingPolicy: '[PLACEHOLDER] Describe your delivery timelines.' });
+    renderWithProviders(<Footer />);
+
+    expect(screen.queryByRole('link', { name: 'Delivery' })).toBeNull();
+  });
+});
 
 describe('Footer social links', () => {
   beforeEach(() => useSiteSettings.mockReset());

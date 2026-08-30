@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -64,6 +67,16 @@ public class PublicSettingsController {
             Map.entry(SettingsService.FONT_BODY, "fontBody"),
             Map.entry(SettingsService.CORNER_RADIUS, "cornerRadius"));
 
+    /** Rendered as markup by the storefront, so cleaned on the way out as well as in. */
+    private static final Set<String> RICH_TEXT_KEYS =
+            Set.of("shippingPolicy", "returnsPolicy", "privacyPolicy");
+
+    /** Matches what the admin screen permits on the way in. */
+    private static final Safelist POLICY_SAFELIST = Safelist.basicWithImages()
+            .addAttributes("a", "href", "title", "rel")
+            .addProtocols("a", "href", "http", "https", "mailto")
+            .addProtocols("img", "src", "http", "https");
+
     private final SettingsService settings;
     private final AppProperties properties;
 
@@ -78,6 +91,19 @@ public class PublicSettingsController {
         Map<String, Object> body = new LinkedHashMap<>();
 
         PUBLIC_KEYS.forEach((key, name) -> body.put(name, settings.find(key).orElse(null)));
+
+        // The policies are rich text and the storefront renders them as markup,
+        // so they are cleaned again on the way out. They are already cleaned on
+        // the way in, and this should therefore never change anything - but
+        // markup is the one thing here that becomes executable in a browser,
+        // and a value written straight into the database never passed through
+        // the admin at all.
+        RICH_TEXT_KEYS.forEach(name -> {
+            Object value = body.get(name);
+            if (value instanceof String html) {
+                body.put(name, Jsoup.clean(html, POLICY_SAFELIST));
+            }
+        });
 
         // the WhatsApp number falls back to the environment, so a deployment
         // that has not been configured through the admin still works
