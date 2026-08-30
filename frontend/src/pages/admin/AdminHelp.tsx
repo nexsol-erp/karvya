@@ -242,10 +242,11 @@ export function AdminHelp() {
             <TableBody>
               <Setting name="store.*" to="/admin/settings#store">
                 Shop name and tagline, shown in the header, page titles and emails.{' '}
-                The logo is uploaded on <Go to="/admin/appearance">Appearance</Go> rather than
-                typed here — <strong>store.logo_key</strong> only holds where the file went.
-                It appears in the header and footer and as the browser tab icon; without one,
-                the shop name is set as a wordmark.
+                The logo is uploaded on <Go to="/admin/appearance">Appearance</Go>, so it does
+                not appear on this screen at all — the setting behind it only records where the
+                file went, and typing a path there could only break it. The logo shows in the
+                header and footer and as the browser tab icon; without one, the shop name is set
+                as a wordmark.
               </Setting>
               <Setting name="contact.*" to="/admin/settings#contact">
                 <strong>contact.whatsapp_number</strong> drives every WhatsApp link; empty hides

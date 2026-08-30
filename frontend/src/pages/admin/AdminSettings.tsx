@@ -105,6 +105,9 @@ export function AdminSettings() {
       // appearance has its own screen, with a preview and contrast readings
       // that a row of hex codes here could not give
       if (group === 'theme') continue;
+      // the logo key names a file the upload wrote; it is changed by uploading
+      // a logo on Appearance, not by typing a path into a box
+      if (setting.key === 'store.logo_key') continue;
       byGroup.set(group, [...(byGroup.get(group) ?? []), setting]);
     }
     return [...byGroup.entries()].sort(([a], [b]) =>

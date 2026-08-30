@@ -133,6 +133,16 @@ public class AdminSettingsService {
                 // an unknown key is a client bug, not something to create
                 throw new NotFoundException("Setting", entry.getKey());
             }
+            // The logo key names a file the upload wrote. Typing it by hand can
+            // only point the shop at something that is not there, or orphan the
+            // files behind the real one, so it is not editable as a value - it
+            // is changed by uploading or removing a logo.
+            if (SettingsService.LOGO_KEY.equals(entry.getKey())) {
+                throw new ConflictException("logo-not-editable",
+                        "The logo is changed by uploading one under Appearance, "
+                                + "not by editing this value.");
+            }
+
             // The form cannot show a secret, so it submits an empty field for
             // one it is not changing. Treating that as a clear would wipe the
             // SMTP password every time an unrelated setting was saved.
