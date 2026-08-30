@@ -258,6 +258,12 @@ export function AdminHelp() {
                 shoppers by design, so that button is the only way to know it works. The
                 password is never shown again once saved; leaving it blank keeps it.
               </Setting>
+              <Setting name="social.*" to="/admin/settings#social">
+                Instagram, Facebook and YouTube. Paste the full address of each —{' '}
+                <em>https://instagram.com/yourshop</em>, not a handle — and the icon appears in
+                the footer. Leave one empty and it is not shown at all, because an icon linking
+                nowhere is worse than no icon.
+              </Setting>
               <Setting name="delivery.*" to="/admin/settings#delivery">
                 A flat charge on every order, and the subtotal above which it is free. Leave the
                 threshold empty to switch that rule off.
@@ -303,15 +309,6 @@ export function AdminHelp() {
               <Chip size="small" label="policy.privacy" variant="outlined"
                     sx={{ height: 20, fontSize: 11, fontFamily: 'monospace' }} />
               {' '}— there are no policy pages on the shop.
-            </Typography>
-            <Typography variant="body2">
-              <Chip size="small" label="social.instagram" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              <Chip size="small" label="social.facebook" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace', mr: 1 }} />
-              <Chip size="small" label="social.youtube" variant="outlined"
-                    sx={{ height: 20, fontSize: 11, fontFamily: 'monospace' }} />
-              {' '}— the footer does not render social links.
             </Typography>
             <Typography variant="body2">
               <Chip size="small" label="contact.address" variant="outlined"

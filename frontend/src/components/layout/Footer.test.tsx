@@ -1,0 +1,85 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { screen } from '@testing-library/react';
+
+import { Footer } from './Footer';
+import { renderWithProviders } from '../../test/render';
+import type { SiteSettings } from '../../hooks/useSiteSettings';
+
+const useSiteSettings = vi.hoisted(() => vi.fn());
+vi.mock('../../hooks/useSiteSettings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../hooks/useSiteSettings')>()),
+  useSiteSettings,
+}));
+
+const base: SiteSettings = {
+  storeName: 'Karvya',
+  tagline: 'Handwoven coir craft',
+  whatsAppNumber: '',
+  contactEmail: '',
+  businessAddress: '',
+  currency: 'INR',
+  locale: 'en-IN',
+  checkoutNotice: '',
+  heroHeading: '',
+  heroSubheading: '',
+  storyHeading: '',
+  storyBody: '',
+  whyHandmadeBody: '',
+  materialsBody: '',
+  instagram: '',
+  facebook: '',
+  youtube: '',
+  appearance: {},
+  whatsAppEnabled: false,
+  isLoading: false,
+};
+
+const given = (overrides: Partial<SiteSettings>) =>
+  useSiteSettings.mockReturnValue({ ...base, ...overrides });
+
+describe('Footer social links', () => {
+  beforeEach(() => useSiteSettings.mockReset());
+
+  it('shows only the networks that have an address', () => {
+    given({ instagram: 'https://instagram.com/karvya', youtube: 'https://youtube.com/@karvya' });
+    renderWithProviders(<Footer />);
+
+    expect(screen.getByRole('link', { name: 'Karvya on Instagram' })).toHaveAttribute(
+      'href',
+      'https://instagram.com/karvya',
+    );
+    expect(screen.getByRole('link', { name: 'Karvya on YouTube' })).toBeInTheDocument();
+    // facebook was never configured, so it is not offered
+    expect(screen.queryByRole('link', { name: /Facebook/ })).toBeNull();
+  });
+
+  it('shows none at all when none are configured', () => {
+    given({});
+    renderWithProviders(<Footer />);
+
+    expect(screen.queryByRole('link', { name: /Instagram|Facebook|YouTube/ })).toBeNull();
+  });
+
+  /**
+   * An href is the one place a stored string becomes executable. The server
+   * types these as URLs and refuses anything but http and https, so this should
+   * never trigger - which is exactly why it is worth a test rather than a
+   * comment.
+   */
+  it('refuses to render an address that is not a web address', () => {
+    given({ instagram: 'javascript:alert(1)', facebook: 'https://facebook.com/karvya' });
+    renderWithProviders(<Footer />);
+
+    expect(screen.queryByRole('link', { name: /Instagram/ })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Karvya on Facebook' })).toBeInTheDocument();
+  });
+
+  it('opens them in a new tab without handing over the referrer', () => {
+    given({ instagram: 'https://instagram.com/karvya' });
+    renderWithProviders(<Footer />);
+
+    const link = screen.getByRole('link', { name: 'Karvya on Instagram' });
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toContain('noopener');
+  });
+});

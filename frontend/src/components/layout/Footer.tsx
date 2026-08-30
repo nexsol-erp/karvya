@@ -3,6 +3,10 @@ import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
+import IconButton from '@mui/material/IconButton';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import YouTubeIcon from '@mui/icons-material/YouTube';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { useSiteSettings } from '../../hooks/useSiteSettings';
@@ -16,8 +20,46 @@ import { whatsAppLink } from '../../lib/format';
  * stubbed, so the footer never asserts something about the business that is
  * not true.
  */
+/**
+ * The networks that have been configured, in a fixed order.
+ *
+ * <p>Each is hidden until it has an address: an icon linking nowhere invites a
+ * click that goes nowhere, which is worse than not offering it.
+ */
+const SOCIAL = [
+  { key: 'instagram', label: 'Instagram', Icon: InstagramIcon },
+  { key: 'facebook', label: 'Facebook', Icon: FacebookIcon },
+  { key: 'youtube', label: 'YouTube', Icon: YouTubeIcon },
+] as const;
+
+/**
+ * Whether a stored address is safe to put in an href.
+ *
+ * <p>The setting is typed as a URL and the server refuses anything that is not
+ * http or https, so this should never reject anything. It is here because an
+ * href is the one place a stored string becomes executable - a javascript:
+ * address in a link runs on click - and a value written before that validation
+ * existed, or straight into the database, would not have passed through it.
+ */
+function isWebAddress(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function Footer() {
   const settings = useSiteSettings();
+
+  // resolved once: only the networks that have a usable address
+  const social = SOCIAL.map(({ key, label, Icon }) => ({
+    key,
+    label,
+    Icon,
+    href: settings[key],
+  })).filter((entry) => entry.href !== '' && isWebAddress(entry.href));
   const year = new Date().getFullYear();
 
   return (
@@ -90,7 +132,27 @@ export function Footer() {
           </Stack>
         </Stack>
 
-        <Typography variant="body2" sx={{ mt: 6, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+        {social.length > 0 && (
+          <Stack direction="row" spacing={0.5} sx={{ mt: 4 }}>
+            {social.map(({ key, label, Icon, href }) => (
+              <IconButton
+                key={key}
+                component="a"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer me"
+                // the icon carries no text, so the link needs a name of its own
+                aria-label={`${settings.storeName} on ${label}`}
+                size="small"
+                sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}
+              >
+                <Icon fontSize="small" />
+              </IconButton>
+            ))}
+          </Stack>
+        )}
+
+        <Typography variant="body2" sx={{ mt: social.length > 0 ? 3 : 6, pt: 3, borderTop: 1, borderColor: 'divider' }}>
           © {year} {settings.storeName}. All rights reserved.
         </Typography>
       </Container>
