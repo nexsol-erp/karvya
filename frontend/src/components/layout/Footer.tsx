@@ -12,6 +12,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { whatsAppLink } from '../../lib/format';
 import { isWritten } from '../../lib/copy';
+import { ShopMark } from '../common/ShopMark';
 
 /**
  * Site footer.
@@ -84,16 +85,9 @@ export function Footer() {
           sx={{ justifyContent: 'space-between' }}
         >
           <Box sx={{ maxWidth: 340 }}>
-            <Typography
-              sx={{
-                fontFamily: '"Fraunces", Georgia, serif',
-                fontWeight: 600,
-                fontSize: '1.5rem',
-                mb: 1,
-              }}
-            >
-              {settings.storeName}
-            </Typography>
+            <Box sx={{ mb: 1 }}>
+              <ShopMark height={40} />
+            </Box>
             <Typography variant="body2">{settings.tagline}</Typography>
           </Box>
 

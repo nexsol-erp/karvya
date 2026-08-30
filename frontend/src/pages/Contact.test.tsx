@@ -18,6 +18,7 @@ vi.mock('../hooks/useSiteSettings', async (importOriginal) => ({
 const settings = {
   storeName: 'Karvya',
   tagline: '',
+  logoKey: '',
   whatsAppNumber: '',
   contactEmail: '',
   businessAddress: '',

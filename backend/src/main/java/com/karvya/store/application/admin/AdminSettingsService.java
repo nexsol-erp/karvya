@@ -1,5 +1,7 @@
 package com.karvya.store.application.admin;
 
+import com.karvya.store.application.media.ImageUploadValidator;
+import com.karvya.store.application.media.LogoService;
 import com.karvya.store.application.settings.SettingsService;
 import com.karvya.store.application.settings.ThemeFonts;
 import com.karvya.store.application.notification.EmailSender;
@@ -19,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -87,13 +90,18 @@ public class AdminSettingsService {
     private final SettingsService settings;
     private final EmailSender emails;
     private final MailSenderProvider mailSenders;
+    private final LogoService logos;
+    private final ImageUploadValidator imageValidator;
 
     public AdminSettingsService(SiteSettingRepository repository, SettingsService settings,
-                                EmailSender emails, MailSenderProvider mailSenders) {
+                                EmailSender emails, MailSenderProvider mailSenders,
+                                LogoService logos, ImageUploadValidator imageValidator) {
         this.repository = repository;
         this.settings = settings;
         this.emails = emails;
         this.mailSenders = mailSenders;
+        this.logos = logos;
+        this.imageValidator = imageValidator;
     }
 
     @Transactional(readOnly = true)
@@ -185,6 +193,46 @@ public class AdminSettingsService {
             return Map.of("sent", false, "recipient", recipient, "source", source,
                     "error", String.valueOf(root.getMessage()));
         }
+    }
+
+    /**
+     * Replaces the shop's logo.
+     *
+     * <p>The previous one is removed only once the new key is safely stored, so
+     * a failure part way through leaves the old mark rather than none.
+     */
+    @Transactional
+    public String replaceLogo(MultipartFile image, String actor) {
+        String previous = settings.find(SettingsService.LOGO_KEY).orElse(null);
+        String key = logos.store(imageValidator.validate(image).bytes());
+
+        repository.findById(SettingsService.LOGO_KEY)
+                .ifPresent(setting -> setting.setValue(key, actor));
+        repository.flush();
+        settings.reload();
+
+        if (previous != null && !previous.equals(key)) {
+            logos.delete(previous);
+        }
+
+        log.info("{} set the shop logo", actor);
+        return key;
+    }
+
+    /** Removes it, and the files behind it. The shop falls back to its name. */
+    @Transactional
+    public void removeLogo(String actor) {
+        String previous = settings.find(SettingsService.LOGO_KEY).orElse(null);
+
+        repository.findById(SettingsService.LOGO_KEY)
+                .ifPresent(setting -> setting.setValue(null, actor));
+        repository.flush();
+        settings.reload();
+
+        if (previous != null) {
+            logos.delete(previous);
+        }
+        log.info("{} removed the shop logo", actor);
     }
 
     private static final java.util.regex.Pattern HEX_COLOUR =

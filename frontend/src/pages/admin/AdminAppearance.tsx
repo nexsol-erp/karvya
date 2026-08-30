@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ThemeProvider, getContrastRatio } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -18,7 +18,7 @@ import Slider from '@mui/material/Slider';
 
 import { SEOHead } from '../../components/common/SEOHead';
 import { ApiError } from '../../api/client';
-import { adminKeys, listSettings, saveSettings } from '../../api/admin';
+import { adminKeys, listSettings, removeLogo, saveSettings, uploadLogo } from '../../api/admin';
 import { buildTheme } from '../../theme';
 import { FONTS, FONT_NAMES } from '../../theme/fonts';
 import { settingsKeys } from '../../api/settings';
@@ -93,6 +93,52 @@ export function AdminAppearance() {
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
   const settings = useQuery({ queryKey: adminKeys.settings, queryFn: listSettings });
+
+  const logoInput = useRef<HTMLInputElement>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  // bumped on every change so the browser reloads a key it has already cached
+  const [logoVersion, setLogoVersion] = useState(0);
+
+  const logoKey =
+    settings.data?.find((s) => s.key === 'store.logo_key')?.value ?? '';
+
+  function afterLogoChange() {
+    setLogoVersion((v) => v + 1);
+    queryClient.invalidateQueries({ queryKey: adminKeys.settings });
+    // the storefront reads the same key for its header, footer and tab icon
+    queryClient.invalidateQueries({ queryKey: settingsKeys.public });
+  }
+
+  async function handleLogo(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    // cleared at once, so choosing the same file again still fires a change
+    event.target.value = '';
+    if (!file) return;
+
+    setMessage(null);
+    setLogoBusy(true);
+    try {
+      await uploadLogo(file);
+      afterLogoChange();
+      setMessage({ tone: 'success', text: 'Logo updated.' });
+    } catch (err) {
+      setMessage({
+        tone: 'error',
+        text: err instanceof ApiError ? err.message : 'That logo could not be uploaded.',
+      });
+    } finally {
+      setLogoBusy(false);
+    }
+  }
+
+  const dropLogo = useMutation({
+    mutationFn: removeLogo,
+    onSuccess: () => {
+      afterLogoChange();
+      setMessage({ tone: 'success', text: 'Logo removed. The shop name is used instead.' });
+    },
+    onError: () => setMessage({ tone: 'error', text: 'That could not be removed.' }),
+  });
 
   useEffect(() => {
     if (!settings.data) return;
@@ -182,6 +228,75 @@ export function AdminAppearance() {
       )}
 
       <Grid container spacing={2.5}>
+        {/* ---- the mark ---- */}
+        <Grid size={{ xs: 12 }}>
+          <Card sx={{ p: 2.5 }}>
+            <Typography variant="h6" component="h2" sx={{ fontSize: '1rem' }}>
+              Logo
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Shown in the header and the footer, and used as the browser tab icon.
+              Without one the shop's name is set as a wordmark.
+            </Typography>
+
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} sx={{ alignItems: 'center' }}>
+              <Box
+                sx={{
+                  minWidth: 200, minHeight: 72, px: 2, py: 1.5,
+                  border: 1, borderColor: 'divider', borderRadius: 2,
+                  display: 'grid', placeItems: 'center',
+                  // a transparent mark is invisible against a matching panel,
+                  // so it is shown against the page rather than the card
+                  bgcolor: 'background.default',
+                }}
+              >
+                {logoKey ? (
+                  <Box
+                    component="img"
+                    src={`/media/${logoKey}.png?v=${logoVersion}`}
+                    alt="The current logo"
+                    sx={{ maxHeight: 56, maxWidth: 220 }}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.disabled">
+                    No logo — the shop name is used
+                  </Typography>
+                )}
+              </Box>
+
+              <Stack spacing={1}>
+                <input
+                  ref={logoInput}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={handleLogo}
+                  hidden
+                />
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => logoInput.current?.click()}
+                    disabled={logoBusy}
+                  >
+                    {logoBusy ? 'Working…' : logoKey ? 'Replace' : 'Upload a logo'}
+                  </Button>
+                  {logoKey && (
+                    <Button size="small" color="inherit" onClick={() => dropLogo.mutate()}
+                            disabled={logoBusy}>
+                      Remove
+                    </Button>
+                  )}
+                </Stack>
+                <Typography variant="body2">
+                  PNG or JPEG, at least 200px a side. A PNG with a transparent
+                  background sits best on a coloured header.
+                </Typography>
+              </Stack>
+            </Stack>
+          </Card>
+        </Grid>
+
         {/* ---- controls ---- */}
         <Grid size={{ xs: 12, lg: 6 }}>
           <Card sx={{ p: 2.5 }}>

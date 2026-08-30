@@ -22,6 +22,8 @@ import type { ThemeOverrides } from '../theme';
 export interface SiteSettings {
   storeName: string;
   tagline: string;
+  /** Storage key of the uploaded logo, or empty for the wordmark. */
+  logoKey: string;
   whatsAppNumber: string;
   contactEmail: string;
   businessAddress: string;
@@ -89,6 +91,7 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
     return {
       storeName: text(s.storeName, config.storeName),
       tagline: text(s.tagline, config.tagline),
+      logoKey: text(s.logoKey),
       whatsAppNumber,
       contactEmail: text(s.contactEmail),
       businessAddress: text(s.businessAddress),

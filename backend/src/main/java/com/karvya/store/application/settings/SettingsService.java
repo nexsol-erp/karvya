@@ -33,6 +33,7 @@ public class SettingsService {
 
     public static final String STORE_NAME = "store.name";
     public static final String STORE_TAGLINE = "store.tagline";
+    public static final String LOGO_KEY = "store.logo_key";
     public static final String WHATSAPP_NUMBER = "contact.whatsapp_number";
     public static final String ADMIN_EMAIL = "contact.admin_email";
     public static final String PUBLIC_EMAIL = "contact.public_email";

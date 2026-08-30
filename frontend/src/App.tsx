@@ -92,6 +92,39 @@ const ResetPassword = lazy(() =>
  * the root. The built-in look is used until the settings arrive, so the first
  * paint is the shop rather than an unstyled page.
  */
+/**
+ * Points the browser tab at the shop's own mark.
+ *
+ * <p>Set from script rather than written into index.html, because the logo is a
+ * setting: the document is served before anyone knows whether there is one. The
+ * link is removed again when the logo is, so a tab does not keep showing a mark
+ * that has been taken down.
+ */
+function Favicon() {
+  const { logoKey } = useSiteSettings();
+
+  useEffect(() => {
+    if (!logoKey) return;
+
+    const icons: HTMLLinkElement[] = [
+      Object.assign(document.createElement('link'), {
+        rel: 'icon',
+        type: 'image/png',
+        href: `/media/${logoKey}-32.png`,
+      }),
+      Object.assign(document.createElement('link'), {
+        rel: 'apple-touch-icon',
+        href: `/media/${logoKey}-180.png`,
+      }),
+    ];
+
+    icons.forEach((icon) => document.head.appendChild(icon));
+    return () => icons.forEach((icon) => icon.remove());
+  }, [logoKey]);
+
+  return null;
+}
+
 function Themed({ children }: { children: ReactNode }) {
   const { appearance } = useSiteSettings();
   const theme = useMemo(() => buildTheme(appearance), [appearance]);
@@ -116,6 +149,7 @@ function Themed({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <Favicon />
       {children}
     </ThemeProvider>
   );

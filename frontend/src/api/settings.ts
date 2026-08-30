@@ -9,6 +9,7 @@ import { apiFetch } from './client';
 export interface PublicSettings {
   storeName: string | null;
   tagline: string | null;
+  logoKey: string | null;
   /** Already normalised to digits, country code first, no leading 00. */
   whatsAppNumber: string | null;
   contactEmail: string | null;

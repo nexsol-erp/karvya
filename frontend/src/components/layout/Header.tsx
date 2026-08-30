@@ -10,14 +10,13 @@ import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import Badge from '@mui/material/Badge';
 import { Link as RouterLink, NavLink, useLocation } from 'react-router-dom';
+import { ShopMark } from '../common/ShopMark';
 
-import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { useCart } from '../../hooks/useCart';
 
 /**
@@ -40,7 +39,6 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { cart } = useCart();
-  const settings = useSiteSettings();
 
   return (
     <AppBar
@@ -59,31 +57,7 @@ export function Header() {
             to="/"
             sx={{ textDecoration: 'none', color: 'text.primary', mr: 'auto' }}
           >
-            <Typography
-              component="span"
-              sx={{
-                fontFamily: '"Fraunces", Georgia, serif',
-                fontWeight: 600,
-                fontSize: { xs: '1.4rem', md: '1.6rem' },
-                letterSpacing: '-0.01em',
-                display: 'block',
-                lineHeight: 1.1,
-              }}
-            >
-              {settings.storeName}
-            </Typography>
-            <Typography
-              component="span"
-              sx={{
-                fontSize: 11,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: 'text.secondary',
-                display: { xs: 'none', sm: 'block' },
-              }}
-            >
-              {settings.tagline}
-            </Typography>
+            <ShopMark height={{ xs: 34, md: 44 }} showTagline />
           </Box>
 
           <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>

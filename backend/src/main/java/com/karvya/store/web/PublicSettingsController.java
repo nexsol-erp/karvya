@@ -38,6 +38,7 @@ public class PublicSettingsController {
     private static final Map<String, String> PUBLIC_KEYS = Map.ofEntries(
             Map.entry(SettingsService.STORE_NAME, "storeName"),
             Map.entry(SettingsService.STORE_TAGLINE, "tagline"),
+            Map.entry(SettingsService.LOGO_KEY, "logoKey"),
             Map.entry(SettingsService.WHATSAPP_NUMBER, "whatsAppNumber"),
             Map.entry(SettingsService.PUBLIC_EMAIL, "contactEmail"),
             Map.entry(SettingsService.BUSINESS_ADDRESS, "businessAddress"),

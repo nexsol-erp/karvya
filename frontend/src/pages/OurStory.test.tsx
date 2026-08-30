@@ -8,6 +8,7 @@ import type { SiteSettings } from '../hooks/useSiteSettings';
 const base: SiteSettings = {
   storeName: 'Karvya',
   tagline: 'Handwoven coir craft',
+  logoKey: '',
   whatsAppNumber: '',
   contactEmail: '',
   businessAddress: '',

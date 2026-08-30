@@ -490,6 +490,16 @@ export interface MailTestResult {
   error?: string;
 }
 
+export const uploadLogo = (file: File): Promise<{ logoKey: string }> => {
+  const form = new FormData();
+  form.append('file', file);
+  // no Content-Type: the browser must set the multipart boundary itself
+  return apiFetch('/admin/settings/logo', { method: 'POST', headers: csrfHeader(), body: form });
+};
+
+export const removeLogo = (): Promise<void> =>
+  apiFetch('/admin/settings/logo', { method: 'DELETE', headers: csrfHeader() });
+
 export const sendTestEmail = (): Promise<MailTestResult> =>
   apiFetch('/admin/settings/mail/test', { method: 'POST', headers: jsonHeaders() });
 

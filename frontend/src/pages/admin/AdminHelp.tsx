@@ -242,8 +242,10 @@ export function AdminHelp() {
             <TableBody>
               <Setting name="store.*" to="/admin/settings#store">
                 Shop name and tagline, shown in the header, page titles and emails.{' '}
-                <strong>store.logo_key does nothing yet</strong> — there is no way to upload a
-                logo, and nothing reads it.
+                The logo is uploaded on <Go to="/admin/appearance">Appearance</Go> rather than
+                typed here — <strong>store.logo_key</strong> only holds where the file went.
+                It appears in the header and footer and as the browser tab icon; without one,
+                the shop name is set as a wordmark.
               </Setting>
               <Setting name="contact.*" to="/admin/settings#contact">
                 <strong>contact.whatsapp_number</strong> drives every WhatsApp link; empty hides
