@@ -55,6 +55,16 @@ export function AdminSettings() {
 
   const settings = useQuery({ queryKey: adminKeys.settings, queryFn: listSettings });
 
+  // A link to #contact has to wait for the settings to arrive: the element it
+  // names does not exist while the form is still a row of skeletons, so the
+  // browser's own scroll-to-hash has already given up by the time it appears.
+  useEffect(() => {
+    if (!settings.data) return;
+    const target = window.location.hash.slice(1);
+    if (!target) return;
+    document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [settings.data]);
+
   // seed the form once the values arrive, without clobbering unsaved edits
   useEffect(() => {
     if (settings.data && Object.keys(draft).length === 0) {
@@ -154,7 +164,9 @@ export function AdminSettings() {
 
       <Stack spacing={2.5}>
         {groups.map(([group, items]) => (
-          <Card key={group} sx={{ p: 2.5 }}>
+          // id so the help page can link straight to a group rather than
+          // to the top of a long form the reader then has to scan
+          <Card key={group} id={group} sx={{ p: 2.5, scrollMarginTop: 80 }}>
             <Typography variant="h6" component="h2" sx={{ fontSize: '1rem', mb: 0.5 }}>
               {GROUP_LABELS[group] ?? group}
             </Typography>
