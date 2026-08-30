@@ -300,29 +300,6 @@ export function AdminHelp() {
           </Table>
         </Section>
 
-        {/* ---- things not in this screen at all ---- */}
-        <Card sx={{ p: { xs: 2, md: 2.75 } }}>
-          <Typography variant="h6" component="h2" sx={{ fontSize: '1.05rem', mb: 0.5 }}>
-            Things you cannot change here
-          </Typography>
-          <Divider sx={{ my: 1.75 }} />
-          <Stack spacing={1.25}>
-            <Typography variant="body2">
-              <strong>Your own email address.</strong> The account it signs in with is fixed once
-              created. Your password is not — use <strong>Change password</strong> in the bar
-              above, any time.
-            </Typography>
-            <Typography variant="body2">
-              <strong>The domain, and the database password.</strong> Those live in a file on the
-              server and need someone with access to it.
-            </Typography>
-            <Typography variant="body2">
-              <strong>Prices already ordered.</strong> An order keeps what the customer was
-              charged; changing a product's price never rewrites what was sold.
-            </Typography>
-          </Stack>
-        </Card>
-
         <Alert severity="warning" variant="outlined">
           <AlertTitle>Before you take real orders</AlertTitle>
           Send a test email and place a test order yourself, all the way through. Then check the
