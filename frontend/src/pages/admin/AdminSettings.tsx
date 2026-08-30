@@ -24,6 +24,22 @@ import type { SettingView } from '../../api/admin';
  * Groups settings by their key prefix, so the form reads as sections rather
  * than one long alphabetical list.
  */
+/**
+ * Settings this screen neither shows nor sends.
+ *
+ * <p>Hiding a field is not enough on its own: the draft is built from every
+ * setting and submitted whole, so a hidden one still travels with the save.
+ * The logo key is rejected by the server - it names a file the upload wrote -
+ * and saving anything at all failed because of it.
+ */
+function ownedHere(key: string): boolean {
+  // appearance has its own screen, with a preview and contrast readings
+  if (key.startsWith('theme.')) return false;
+  // the logo is uploaded on Appearance; this only records where the file went
+  if (key === 'store.logo_key') return false;
+  return true;
+}
+
 const GROUP_LABELS: Record<string, string> = {
   mail: 'Email delivery (SMTP)',
   store: 'Store identity',
@@ -68,7 +84,9 @@ export function AdminSettings() {
   // seed the form once the values arrive, without clobbering unsaved edits
   useEffect(() => {
     if (settings.data && Object.keys(draft).length === 0) {
-      setDraft(Object.fromEntries(settings.data.map((s) => [s.key, s.value ?? ''])));
+      setDraft(Object.fromEntries(
+        settings.data.filter((s) => ownedHere(s.key)).map((s) => [s.key, s.value ?? '']),
+      ));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.data]);
@@ -77,7 +95,9 @@ export function AdminSettings() {
     mutationFn: () => saveSettings(draft),
     onSuccess: (updated) => {
       queryClient.setQueryData(adminKeys.settings, updated);
-      setDraft(Object.fromEntries(updated.map((s) => [s.key, s.value ?? ''])));
+      setDraft(Object.fromEntries(
+        updated.filter((s) => ownedHere(s.key)).map((s) => [s.key, s.value ?? '']),
+      ));
       setMessage({ tone: 'success', text: 'Settings saved.' });
     },
     onError: (err) => {
@@ -102,12 +122,7 @@ export function AdminSettings() {
     const byGroup = new Map<string, SettingView[]>();
     for (const setting of settings.data ?? []) {
       const group = setting.key.split('.')[0];
-      // appearance has its own screen, with a preview and contrast readings
-      // that a row of hex codes here could not give
-      if (group === 'theme') continue;
-      // the logo key names a file the upload wrote; it is changed by uploading
-      // a logo on Appearance, not by typing a path into a box
-      if (setting.key === 'store.logo_key') continue;
+      if (!ownedHere(setting.key)) continue;
       byGroup.set(group, [...(byGroup.get(group) ?? []), setting]);
     }
     return [...byGroup.entries()].sort(([a], [b]) =>
@@ -118,7 +133,9 @@ export function AdminSettings() {
   // an empty value is a different problem from placeholder copy: it does not
   // look wrong on the page, it just quietly removes whatever it drives
   const unsetCount = (settings.data ?? []).filter((s) => s.unset).length;
-  const dirty = (settings.data ?? []).some((s) => (s.value ?? '') !== (draft[s.key] ?? ''));
+  const dirty = (settings.data ?? [])
+    .filter((s) => ownedHere(s.key))
+    .some((s) => (s.value ?? '') !== (draft[s.key] ?? ''));
 
   if (settings.isPending) {
     return (
